@@ -4,7 +4,7 @@ import styles from "../styles/Home.module.css";
 import { useQuery } from "@tanstack/react-query";
 
 const Home: NextPage = () => {
-  const { data, isLoading, isError, error } = useQuery(
+  const { data, isLoading, isError, error } = useQuery<String, Error>(
     ["nextTest"],
     async () => {
       const response = await fetch("/api/next", { method: "GET" });
@@ -26,7 +26,7 @@ const Home: NextPage = () => {
             <div className="">Loading request from Spring</div>
           ) : isError ? (
             <div>
-              <>Error: {error}</>
+              <>Error: {error.message}</>
             </div>
           ) : (
             <div>Data: {data}</div>
