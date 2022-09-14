@@ -1,4 +1,14 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 30010897973-dmbo1m7sqff03pvi407u8hndv9qrphke.apps.googleusercontent.com
+            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+            scope:
+              - email
+              - profile
   jpa:
     hibernate:
       ddl-auto: update
@@ -6,3 +16,9 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/choicify
     username: ${MYSQL_USERNAME}
     password: ${MYSQL_PASSWORD}
+
+app:
+  tokenSecret: 926D96C90030DD58429D2751AC1BDBBCfdsafeqwip129fealwmc0123r32dmo3240fgrewjf2193fewnpo12309cccewmnakdl21opcv0009n321ofdsalkjyhg
+  tokenExpirationMsec: 864000000
+  authorizedRedirectUris:
+    - http://localhost:3000/oauth2/redirect
