@@ -1,37 +1,20 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import styles from "../styles/Home.module.css";
-import { useQuery } from "@tanstack/react-query";
+import { LogIn } from "../components/LogIn";
+import { useContext } from "react";
+import { logInContext } from "../components/ProfileLayout";
 
 const Home: NextPage = () => {
-  const { data, isLoading, isError, error } = useQuery<String, Error>(
-    ["nextTest"],
-    async () => {
-      const response = await fetch("/api/next", { method: "GET" });
-      if (!response.ok) {
-        throw new Error("Error in the request");
-      }
-      return response.text();
-    }
-  );
+  const {isLogIn} = useContext(logInContext);
 
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
-        <title>Example of how to request data from Spring</title>
+        <title>Choicify</title>
       </Head>
       <main>
-        <div className="text-3xl font-bold underline">
-          {isLoading ? (
-            <div className="">Loading request from Spring</div>
-          ) : isError ? (
-            <div>
-              <>Error: {error.message}</>
-            </div>
-          ) : (
-            <div>Data: {data}</div>
-          )}
-        </div>
+        <div className="text-center text-3xl font-bold">Choicify</div>
+        {isLogIn ? <div>You are in!</div> : <div><LogIn /></div>}
       </main>
     </div>
   );
