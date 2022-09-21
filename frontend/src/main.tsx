@@ -12,6 +12,7 @@ import { request } from "./utils/sessionUtils";
 import { OauthRedirect } from "./routes/oauth2/redirect";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Profile } from "./routes/profile";
+import { Home } from "./routes/Home";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       return "Log In";
     },
     children: [
+      {
+        path: "/",
+        element: <Home />
+      },
       {
         path: "/profile",
         element: <Profile />,

@@ -2,15 +2,21 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { removeToken } from "../utils/sessionUtils";
 
 function Root() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div className="App">
-      <button onClick={() => {
-        removeToken();
-        navigate("/login")
-      }}>Log Out</button>
-      <div>You are in</div>
+      <div className="absolute top-0 right-0">
+        <button
+          onClick={() => {
+            removeToken();
+            navigate("/login");
+          }}
+        >
+          Log Out
+        </button>
+        <div>Profile Picture</div>
+      </div>
       <Outlet />
     </div>
   );
