@@ -5,7 +5,7 @@ let config: {
   redirectUri: string,
   apiBaseUrl: string
 };
-if (process.env.NODE_ENV === "production") {
+if (import.meta.env.PROD) {
   config = prod;
 } else {
   config = dev;

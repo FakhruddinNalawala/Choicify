@@ -1,5 +1,6 @@
-import { Dispatch, FC, SetStateAction } from "react";
-import { GOOGLE_AUTH_URL } from "../constants";
+import { FC } from "react";
+import { GOOGLE_AUTH_URL } from "../../constants";
+import "./style.css";
 
 export const LogIn: FC = () => {
   return (
