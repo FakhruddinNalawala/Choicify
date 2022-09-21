@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path="/api")
+@RequestMapping(path = "/api")
 public class UserController {
 
     private final UserRepository userRepository;
