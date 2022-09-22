@@ -8,6 +8,7 @@ import com.choicify.backend.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,8 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,11 +45,22 @@ public class UserController {
     }
 
     @GetMapping("/profile/picture/{userId}.svg")
-    public ResponseEntity<Resource> getProfileImage(@PathVariable String userId) throws IOException {
-        long id = Long.parseLong(userId, 10);
-        String inputFile = "./files/profile_pictures/" + id + ".svg";
-        Path path = new File(inputFile).toPath();
-        FileSystemResource resource = new FileSystemResource(path);
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType(Files.probeContentType(path))).body(resource);
+    public ResponseEntity<Resource> getProfileImage(@PathVariable String userId) {
+        ResponseEntity<Resource> response;
+        try {
+            long id = Long.parseLong(userId, 10);
+            String inputFile = "./files/profile_pictures/" + id + ".svg";
+            File file = new File(inputFile);
+            if (!file.exists()) {
+                throw new FileNotFoundException();
+            }
+            Path path = file.toPath();
+            FileSystemResource resource = new FileSystemResource(path);
+            response = ResponseEntity.ok().contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                    .body(resource);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found");
+        }
+        return response;
     }
 }
