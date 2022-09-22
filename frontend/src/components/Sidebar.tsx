@@ -56,7 +56,7 @@ export const Sidebar: FC = () => {
         className="absolute right-0 top-0"
       >
         <img
-          src={data.imageUrl}
+          src={`/api/profile/picture/${data.id}.svg`}
           className={`mr-4 mt-4 ml-auto h-16 w-16 rounded-full shadow-md shadow-gray-400 transition-transform duration-200 hover:cursor-pointer hover:shadow-none`}
           onClick={() => {
             setShow((state) => !state);
