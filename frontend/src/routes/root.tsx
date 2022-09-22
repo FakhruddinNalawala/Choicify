@@ -1,16 +1,10 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { removeToken } from "../utils/sessionUtils";
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "../components/Sidebar";
 
 function Root() {
-  const navigate = useNavigate()
-
   return (
     <div className="App">
-      <button onClick={() => {
-        removeToken();
-        navigate("/login")
-      }}>Log Out</button>
-      <div>You are in</div>
+      <Sidebar />
       <Outlet />
     </div>
   );
