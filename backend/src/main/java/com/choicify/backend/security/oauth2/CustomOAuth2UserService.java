@@ -87,7 +87,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         User userDB = userRepository.save(user);
         // get random seed
-        byte[] randomByteArray = new byte[16]; // length is bounded by 7
+        byte[] randomByteArray = new byte[16];
         new Random().nextBytes(randomByteArray);
         String randomSeed = new String(randomByteArray, StandardCharsets.UTF_8);
         RestTemplate restTemplate = new RestTemplateBuilder().build();
