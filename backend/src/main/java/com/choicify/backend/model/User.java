@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import java.util.Set;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
@@ -36,6 +37,9 @@ public class User {
     private AuthProvider provider;
 
     private String providerId;
+
+    @OneToMany(mappedBy = "user", targetEntity = Player.class, fetch = FetchType.LAZY)
+    private Set<Player> players;
 
     public Long getId() {
         return id;
