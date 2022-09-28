@@ -1,4 +1,5 @@
 import { FC, useState } from "react";
+import { Spinner } from "../../../components/Spinner";
 
 const LINE_HEIGHT = 20;
 const EXTRA_HEIGHT = 24;
@@ -38,6 +39,7 @@ export const NewTournament: FC = () => {
         style={{ fontFamily: "'Dangrek', cursive" }}
         className="h-10 w-5/6 max-w-2xl border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
       >
+        <Spinner className="-ml-1 mr-3 inline-block h-5 w-5 animate-spin text-black" />
         Create
       </button>
       <div className="absolute bottom-0 w-full pb-10 text-center">

@@ -25,11 +25,11 @@ public class Tournament {
     private DecisionList decisionList;
 
     @ManyToOne
-    @JoinColumn(name = "current_match", nullable = false)
+    @JoinColumn(name = "current_match")
     private Match currentMatch;
 
     @ManyToOne
-    @JoinColumn(name = "winner", nullable = false)
+    @JoinColumn(name = "winner")
     private Option winner;
 
     private boolean isDeleted;
