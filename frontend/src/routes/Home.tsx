@@ -19,7 +19,6 @@ export const Home: FC = () => {
       />
       <button
         style={{ fontFamily: "'Dangrek', cursive" }}
-        placeholder="Tournament ID"
         className="h-10 w-56 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none lg:w-64"
       >
         Join
