@@ -15,6 +15,7 @@ import { Profile } from "./routes/profile";
 import { Home } from "./routes/Home";
 import { Lists } from "./routes/lists";
 import { Settings } from "./routes/settings";
+import { NewTournament } from "./routes/tournament/new";
 import { FullPageLoader } from "./components/FullPageLoader";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
         path: "/settings",
         element: <Settings />,
       },
+      {
+        path: "/tournament/new",
+        element: <NewTournament />,
+      }
     ],
   },
   {
