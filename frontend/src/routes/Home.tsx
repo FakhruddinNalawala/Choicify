@@ -28,7 +28,7 @@ export const Home: FC = () => {
         style={{ fontFamily: "Dangrek" }}
       >
         <Link
-          to="tournament/new"
+          to="decisionList/new"
           className="inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-black text-center text-5xl shadow-md hover:shadow-gray-400"
         >
           +

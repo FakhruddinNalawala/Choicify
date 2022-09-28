@@ -15,8 +15,10 @@ import { Profile } from "./routes/profile";
 import { Home } from "./routes/Home";
 import { Lists } from "./routes/lists";
 import { Settings } from "./routes/settings";
-import { NewTournament } from "./routes/tournament/new";
+import { NewDecisionList } from "./routes/decisionList/new";
 import { FullPageLoader } from "./components/FullPageLoader";
+import "react-toastify/dist/ReactToastify.css";
+import { EditDecisionList } from "./routes/decisionList/edit";
 
 const queryClient = new QueryClient();
 
@@ -49,9 +51,20 @@ const router = createBrowserRouter([
         element: <Settings />,
       },
       {
-        path: "/tournament/new",
-        element: <NewTournament />,
-      }
+        path: "/decisionList/new",
+        element: <NewDecisionList />,
+      },
+      {
+        path: "/decisionList/edit/:decisionListId",
+        element: <EditDecisionList />,
+        loader: async ({ params }) => {
+          let res = await request(`/api/decisionList/${params.decisionListId}`);
+          if (!res.ok) {
+            return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
+          }
+          return await res.json();
+        },
+      },
     ],
   },
   {

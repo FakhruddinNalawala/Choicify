@@ -45,11 +45,10 @@ public class UserController {
     }
 
     @GetMapping("/profile/picture/{userId}.svg")
-    public ResponseEntity<Resource> getProfileImage(@PathVariable String userId) {
+    public ResponseEntity<Resource> getProfileImage(@PathVariable long userId) {
         ResponseEntity<Resource> response;
         try {
-            long id = Long.parseLong(userId, 10);
-            String inputFile = "./files/profile_pictures/" + id + ".svg";
+            String inputFile = "./files/profile_pictures/" + userId + ".svg";
             File file = new File(inputFile);
             if (!file.exists()) {
                 throw new FileNotFoundException();

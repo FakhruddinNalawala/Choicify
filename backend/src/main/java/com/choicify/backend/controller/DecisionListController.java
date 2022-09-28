@@ -11,12 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Getter
@@ -31,7 +29,6 @@ class NewDecisionListBody {
 @RequestMapping(path = "/api")
 public class DecisionListController {
     private final DecisionListRepository decisionListRepository;
-    private final UserRepository userRepository;
 
     @PostMapping("/decisionList/new")
     @PreAuthorize("hasRole('USER')")
@@ -45,5 +42,18 @@ public class DecisionListController {
         newDecisionList.setQuestion(body.getQuestion());
         DecisionList dbDecisionList = decisionListRepository.save(newDecisionList);
         return dbDecisionList.getId();
+    }
+
+    @GetMapping("/decisionList/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public DecisionList getDecisionList(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        Optional<DecisionList> decisionList = decisionListRepository.findById(id);
+        if (!decisionList.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not found the decision list");
+        }
+        if (!Objects.equals(decisionList.get().getUser().getId(), userPrincipal.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not found the decision list");
+        }
+        return decisionList.get();
     }
 }

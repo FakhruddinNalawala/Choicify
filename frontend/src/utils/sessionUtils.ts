@@ -21,7 +21,10 @@ export const request: (
   if (accessTokenInternal) {
     headers.append("Authorization", `Bearer ${accessTokenInternal}`);
   }
-  const defaults = { headers: headers };
-  init = Object.assign({}, defaults, init);
+  if (init !== undefined) {
+    init.headers = headers;
+  } else {
+    init = { headers };
+  }
   return fetch(input, init);
 };
