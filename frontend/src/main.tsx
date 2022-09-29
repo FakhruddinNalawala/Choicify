@@ -51,11 +51,11 @@ const router = createBrowserRouter([
         element: <Settings />,
       },
       {
-        path: "/decisionList/new",
+        path: "/list/new",
         element: <NewDecisionList />,
       },
       {
-        path: "/decisionList/edit/:decisionListId",
+        path: "/list/edit/:decisionListId",
         element: <EditDecisionList />,
         loader: async ({ params }) => {
           let res = await request(`/api/decisionList/${params.decisionListId}`);

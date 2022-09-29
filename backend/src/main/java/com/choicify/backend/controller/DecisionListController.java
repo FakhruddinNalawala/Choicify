@@ -1,19 +1,23 @@
 package com.choicify.backend.controller;
 
 import com.choicify.backend.model.DecisionList;
+import com.choicify.backend.model.Option;
 import com.choicify.backend.model.User;
 import com.choicify.backend.repository.DecisionListRepository;
+import com.choicify.backend.repository.OptionRepository;
 import com.choicify.backend.repository.UserRepository;
 import com.choicify.backend.security.CurrentUser;
 import com.choicify.backend.security.UserPrincipal;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,11 +28,21 @@ class NewDecisionListBody {
     private String question;
 }
 
+@Getter
+@Setter
+@RequiredArgsConstructor
+class NewOptionBody {
+    private String name;
+    private String description;
+    private String url;
+}
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api")
 public class DecisionListController {
     private final DecisionListRepository decisionListRepository;
+    private final OptionRepository optionRepository;
 
     @PostMapping("/decisionList/new")
     @PreAuthorize("hasRole('USER')")
@@ -47,6 +61,26 @@ public class DecisionListController {
     @GetMapping("/decisionList/{id}")
     @PreAuthorize("hasRole('USER')")
     public DecisionList getDecisionList(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        return getDecisionListFromDb(userPrincipal, id);
+    }
+
+    @GetMapping("/decisionList/{id}/options")
+    @PreAuthorize("hasRole('USER')")
+    public List<Option> getDecisionListOptions(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        return optionRepository.findByDecisionList(decisionList);
+    }
+
+    @PostMapping("/decisionList/{id}/options/new")
+    @PreAuthorize("hasRole('USER')")
+    public Long createNewDecisionListOption(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        Option newOption = new Option();
+        newOption.setName("Test"); // FIXME: finish setting up this
+        return 1L;
+    }
+
+    private DecisionList getDecisionListFromDb(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         Optional<DecisionList> decisionList = decisionListRepository.findById(id);
         if (!decisionList.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not found the decision list");

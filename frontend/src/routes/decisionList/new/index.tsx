@@ -29,7 +29,7 @@ export const NewDecisionList: FC = () => {
     },
     {
       onSuccess: (id) => {
-        navigate(`/decisionList/edit/${id}`);
+        navigate(`/list/edit/${id}`);
       },
       onError: (error) => {
         toast.error(error.message);

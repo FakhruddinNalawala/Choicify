@@ -4,7 +4,7 @@ import { ToastContainer } from "react-toastify";
 
 function Root() {
   return (
-    <div className="App">
+    <div className="App" style={{ fontFamily: "Dangrek" }}>
       <Sidebar />
       <Outlet />
       <ToastContainer
