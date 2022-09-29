@@ -74,7 +74,7 @@ public class DecisionListController {
     @PostMapping("/decisionList/{id}/options/new")
     @PreAuthorize("hasRole('USER')")
     public Option createNewDecisionListOption(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id,
-                                            @RequestBody NewOptionBody body) {
+                                              @RequestBody NewOptionBody body) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
         Option newOption = new Option();
         newOption.setName(body.getName());
@@ -82,6 +82,20 @@ public class DecisionListController {
         newOption.setUrl(body.getUrl());
         newOption.setDecisionList(decisionList);
         return optionRepository.save(newOption);
+    }
+
+    @PutMapping("/decisionList/{id}/options/{optionId}/edit")
+    @PreAuthorize("hasRole('USER')")
+    public Option editDecisionListOption(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id,
+                                         @PathVariable long optionId, @RequestBody NewOptionBody body) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        Option updateOption = new Option();
+        updateOption.setId(optionId);
+        updateOption.setName(body.getName());
+        updateOption.setDescription(body.getDescription());
+        updateOption.setUrl(body.getUrl());
+        updateOption.setDecisionList(decisionList);
+        return optionRepository.save(updateOption);
     }
 
     private DecisionList getDecisionListFromDb(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {

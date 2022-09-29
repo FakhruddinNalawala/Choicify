@@ -76,6 +76,49 @@ export const EditDecisionList: FC = () => {
       },
     }
   );
+  const { mutate: update } = useMutation<DecisionOption, Error, DecisionOption>(
+    async (updateOption) => {
+      let res = await request(
+        `/api/decisionList/${decisionList.id}/options/${updateOption.id}/edit`,
+        {
+          method: "PUT",
+          body: JSON.stringify(updateOption),
+        }
+      );
+      if (!res.ok) {
+        throw new Error((await res.json()).message);
+      }
+      return await res.json();
+    },
+    {
+      onMutate: async (updateOption) => {
+        updateOption.isOptimistic = true;
+        const previousOptions = queryClient.getQueryData([
+          `options-${decisionList.id}`,
+        ]);
+        queryClient.setQueryData<DecisionOption[]>(
+          [`options-${decisionList.id}`],
+          (old) => {
+            if (old === undefined) return [updateOption];
+            let newOptions = [...old];
+            for (let i = 0; i < newOptions.length; i++) {
+              if (newOptions[i].id === updateOption.id) {
+                newOptions[i] = updateOption;
+                return newOptions;
+              }
+            }
+          }
+        );
+        return { previousOptions };
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries([`options-${decisionList.id}`]);
+      },
+    }
+  );
 
   const onSubmitNewOption = useCallback(() => {
     if (toastIdRef.current !== null) {
@@ -84,11 +127,21 @@ export const EditDecisionList: FC = () => {
     if (editName === "") {
       toastIdRef.current = toast.error("Name cannot be empty");
     } else {
-      mutate({
-        name: editName,
-        description: editDescription || undefined,
-        url: editUrl || undefined,
-      });
+      if (editId === undefined) {
+        mutate({
+          name: editName,
+          description: editDescription || undefined,
+          url: editUrl || undefined,
+        });
+      } else {
+        update({
+          id: editId,
+          name: editName,
+          description: editDescription || undefined,
+          url: editUrl || undefined,
+        });
+      }
+      setEditId(undefined);
       setEditName("");
       setEditDescription("");
       setEditUrl("");
