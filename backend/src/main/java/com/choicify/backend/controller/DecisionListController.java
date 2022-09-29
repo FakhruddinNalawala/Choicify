@@ -68,7 +68,7 @@ public class DecisionListController {
     @PreAuthorize("hasRole('USER')")
     public List<Option> getDecisionListOptions(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
-        return optionRepository.findByDecisionList(decisionList);
+        return optionRepository.findByDecisionListNotDeleted(decisionList.getId());
     }
 
     @PostMapping("/decisionList/{id}/options/new")
@@ -98,13 +98,27 @@ public class DecisionListController {
         return optionRepository.save(updateOption);
     }
 
+    @DeleteMapping("/decisionList/{id}/options/{optionId}/delete")
+    @PreAuthorize("hasRole('USER')")
+    public Long deleteDecisionListOption(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id,
+                                         @PathVariable long optionId) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        Optional<Option> toDelete = optionRepository.findById(optionId);
+        if (!toDelete.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the option");
+        }
+        Option toDel = toDelete.get();
+        toDel.setIsDeleted(true);
+        return optionRepository.save(toDel).getId();
+    }
+
     private DecisionList getDecisionListFromDb(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         Optional<DecisionList> decisionList = decisionListRepository.findById(id);
         if (!decisionList.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not found the decision list");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the decision list");
         }
         if (!Objects.equals(decisionList.get().getUser().getId(), userPrincipal.getUser().getId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not found the decision list");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the decision list");
         }
         return decisionList.get();
     }

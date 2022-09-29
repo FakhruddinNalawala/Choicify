@@ -119,6 +119,49 @@ export const EditDecisionList: FC = () => {
       },
     }
   );
+  const { mutate: deleteOption } = useMutation<number, Error, number>(
+    async (optionId) => {
+      let res = await request(
+        `/api/decisionList/${decisionList.id}/options/${optionId}/delete`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!res.ok) {
+        throw new Error((await res.json()).message);
+      }
+      return await res.json();
+    },
+    {
+      onMutate: async (optionId) => {
+        const previousOptions = queryClient.getQueryData([
+          `options-${decisionList.id}`,
+        ]);
+        queryClient.setQueryData<DecisionOption[]>(
+          [`options-${decisionList.id}`],
+          (old) => {
+            if (old === undefined) return undefined;
+            if (old.length === 0) return [];
+            let newOptions = [...old];
+            for (let i = 0; i < newOptions.length; i++) {
+              if (newOptions[i].id === optionId) {
+                newOptions.splice(i, 1);
+                return newOptions;
+              }
+            }
+            return newOptions;
+          }
+        );
+        return { previousOptions };
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries([`options-${decisionList.id}`]);
+      },
+    }
+  );
 
   const onSubmitNewOption = useCallback(() => {
     if (toastIdRef.current !== null) {
@@ -190,6 +233,7 @@ export const EditDecisionList: FC = () => {
                 }
               }
             }}
+            onDelete={deleteOption}
           />
         </div>
       </div>
@@ -233,6 +277,7 @@ interface OptionListProps {
   data: DecisionOption[] | undefined;
   isLoading: boolean;
   onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
 }
 interface DecisionOption {
   id?: number;
@@ -243,7 +288,12 @@ interface DecisionOption {
   isOptimistic?: boolean;
 }
 
-const OptionList: FC<OptionListProps> = ({ data, isLoading, onEdit }) => {
+const OptionList: FC<OptionListProps> = ({
+  data,
+  isLoading,
+  onEdit,
+  onDelete,
+}) => {
   if (isLoading) {
     return (
       <div className="text-center">
@@ -270,7 +320,13 @@ const OptionList: FC<OptionListProps> = ({ data, isLoading, onEdit }) => {
             className="border-b-2 border-gray-300 p-1 pl-2 pr-2 hover:bg-gray-100"
           >
             <span className="inline">{option.name}</span>
-            <span className="float-right mt-1 mr-2 inline cursor-pointer text-lg">
+            <span
+              className="float-right mt-1 mr-2 inline cursor-pointer text-lg"
+              onClick={() => {
+                if (option.isOptimistic || option.id === undefined) return;
+                onDelete(option.id);
+              }}
+            >
               <AiOutlineDelete />
             </span>
             <span
