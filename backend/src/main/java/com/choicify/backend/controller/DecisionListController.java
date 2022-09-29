@@ -73,11 +73,15 @@ public class DecisionListController {
 
     @PostMapping("/decisionList/{id}/options/new")
     @PreAuthorize("hasRole('USER')")
-    public Long createNewDecisionListOption(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+    public Option createNewDecisionListOption(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id,
+                                            @RequestBody NewOptionBody body) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
         Option newOption = new Option();
-        newOption.setName("Test"); // FIXME: finish setting up this
-        return 1L;
+        newOption.setName(body.getName());
+        newOption.setDescription(body.getDescription());
+        newOption.setUrl(body.getUrl());
+        newOption.setDecisionList(decisionList);
+        return optionRepository.save(newOption);
     }
 
     private DecisionList getDecisionListFromDb(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {

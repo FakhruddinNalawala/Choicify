@@ -1,7 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { FC } from "react";
-import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import { Transition } from "@headlessui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FC, useEffect, useRef, useState } from "react";
+import {
+  AiOutlineCheck,
+  AiOutlineClose,
+  AiOutlineDelete,
+  AiOutlineEdit,
+} from "react-icons/ai";
 import { useLoaderData } from "react-router-dom";
+import { Id, toast } from "react-toastify";
 import { Spinner } from "../../../components/Spinner";
 import { request } from "../../../utils/sessionUtils";
 
@@ -12,6 +19,7 @@ interface DecisionList {
 
 export const EditDecisionList: FC = () => {
   const decisionList = useLoaderData() as DecisionList;
+  const [showCreateNewOption, setShowCreateNewOption] = useState(false);
   const { data, isLoading } = useQuery<DecisionOption[], Error>(
     [`options-${decisionList.id}`],
     async () => {
@@ -20,6 +28,44 @@ export const EditDecisionList: FC = () => {
         throw new Error((await res.json()).message);
       }
       return await res.json();
+    }
+  );
+  const queryClient = useQueryClient();
+  const { mutate } = useMutation<DecisionOption, Error, DecisionOption>(
+    async (newOption) => {
+      let res = await request(
+        `/api/decisionList/${decisionList.id}/options/new`,
+        {
+          method: "POST",
+          body: JSON.stringify(newOption),
+        }
+      );
+      if (!res.ok) {
+        throw new Error((await res.json()).message);
+      }
+      return await res.json();
+    },
+    {
+      onMutate: async (newOption) => {
+        newOption.id = Math.floor(Math.random() * 100_000_000);
+        const previousOptions = queryClient.getQueryData([
+          `options-${decisionList.id}`,
+        ]);
+        queryClient.setQueryData<DecisionOption[]>(
+          [`options-${decisionList.id}`],
+          (old) => {
+            if (old === undefined) return [newOption];
+            return [...old, newOption];
+          }
+        );
+        return { previousOptions };
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries([`options-${decisionList.id}`]);
+      },
     }
   );
 
@@ -54,10 +100,21 @@ export const EditDecisionList: FC = () => {
           <button
             style={{ width: "48%" }}
             className="h-10 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
+            onClick={() => setShowCreateNewOption(true)}
           >
             New Choice
           </button>
         </div>
+      </div>
+      <div className="flex w-full justify-center">
+        <CreateNewOptionPanel
+          show={showCreateNewOption}
+          close={() => setShowCreateNewOption(false)}
+          submit={mutate}
+          initialName=""
+          initialDescription=""
+          initialUrl=""
+        />
       </div>
     </div>
   );
@@ -68,11 +125,11 @@ interface OptionListProps {
   isLoading: boolean;
 }
 interface DecisionOption {
-  id: number;
+  id?: number;
   name: string;
   description?: string;
   url?: string;
-  isDeleted: boolean;
+  isDeleted?: boolean;
 }
 
 const OptionList: FC<OptionListProps> = ({ data, isLoading }) => {
@@ -112,5 +169,105 @@ const OptionList: FC<OptionListProps> = ({ data, isLoading }) => {
         ))}
       </ul>
     </div>
+  );
+};
+
+interface CreateNewOptionPanelProps {
+  show: boolean;
+  close: () => void;
+  submit: (data: DecisionOption) => void;
+  initialName: string;
+  initialDescription: string;
+  initialUrl: string;
+}
+
+const CreateNewOptionPanel: FC<CreateNewOptionPanelProps> = ({
+  show,
+  close,
+  submit,
+  initialName,
+  initialDescription,
+  initialUrl,
+}) => {
+  const [name, setName] = useState(initialName);
+  const [description, setDescription] = useState(initialDescription);
+  const [url, setUrl] = useState(initialUrl);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const toastIdRef = useRef<Id | null>(null);
+
+  return (
+    <Transition
+      show={show}
+      className="fixed bottom-0 z-30 h-80 w-full max-w-4xl rounded-t-2xl bg-white p-4 shadow-[0_0_7px_2px_rgba(0,0,0,0.1)] shadow-gray-400"
+      enter="transition ease-in-out duration-200 transform"
+      enterFrom="translate-y-full"
+      enterTo="translate-y-0"
+      leave="transition ease-in-out duration-200 transform"
+      leaveFrom="translate-y-0"
+      leaveTo="translate-y-full"
+      afterEnter={() => {
+        if (nameInputRef.current !== null) {
+          nameInputRef.current.focus();
+        }
+      }}
+    >
+      <div className="text-xl">Create a new option</div>
+      <input
+        ref={nameInputRef}
+        type="text"
+        placeholder="name"
+        className="mt-3 w-full outline-none"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <textarea
+        placeholder="description"
+        className="mt-3 h-28 w-full resize-none outline-none"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="do you want to add a link? paste it here"
+        className="mt-3 w-full outline-none"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <button
+        className="absolute bottom-5 right-10 h-10 w-10 rounded-full p-1 text-center text-2xl shadow-sm shadow-gray-400 hover:shadow-none"
+        onClick={() => {
+          if (toastIdRef.current !== null) {
+            toast.dismiss(toastIdRef.current);
+          }
+          if (name === "") {
+            toastIdRef.current = toast.error("Name cannot be empty");
+          } else {
+            submit({
+              name,
+              description: description || undefined,
+              url: url || undefined,
+            });
+            setName("");
+            setDescription("");
+            setUrl("");
+          }
+          if (nameInputRef.current !== null) {
+            nameInputRef.current.focus();
+          }
+        }}
+      >
+        <div className="flex h-full w-full items-center justify-center">
+          <AiOutlineCheck />
+        </div>
+      </button>
+      <button
+        className="absolute bottom-5 left-10 h-10 w-10 rounded-full p-1 text-center text-2xl shadow-sm shadow-gray-400 hover:shadow-none"
+        onClick={close}
+      >
+        <div className="flex h-full w-full items-center justify-center">
+          <AiOutlineClose />
+        </div>
+      </button>
+    </Transition>
   );
 };
