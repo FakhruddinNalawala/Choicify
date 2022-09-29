@@ -1,6 +1,6 @@
 import { Transition } from "@headlessui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import {
   AiOutlineCheck,
   AiOutlineClose,
@@ -20,6 +20,13 @@ interface DecisionList {
 export const EditDecisionList: FC = () => {
   const decisionList = useLoaderData() as DecisionList;
   const [showCreateNewOption, setShowCreateNewOption] = useState(false);
+
+  const [editId, setEditId] = useState<number | undefined>(undefined);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editUrl, setEditUrl] = useState("");
+  const toastIdRef = useRef<Id | null>(null);
+
   const { data, isLoading } = useQuery<DecisionOption[], Error>(
     [`options-${decisionList.id}`],
     async () => {
@@ -48,6 +55,7 @@ export const EditDecisionList: FC = () => {
     {
       onMutate: async (newOption) => {
         newOption.id = Math.floor(Math.random() * 100_000_000);
+        newOption.isOptimistic = true;
         const previousOptions = queryClient.getQueryData([
           `options-${decisionList.id}`,
         ]);
@@ -69,6 +77,34 @@ export const EditDecisionList: FC = () => {
     }
   );
 
+  const onSubmitNewOption = useCallback(() => {
+    if (toastIdRef.current !== null) {
+      toast.dismiss(toastIdRef.current);
+    }
+    if (editName === "") {
+      toastIdRef.current = toast.error("Name cannot be empty");
+    } else {
+      mutate({
+        name: editName,
+        description: editDescription || undefined,
+        url: editUrl || undefined,
+      });
+      setEditName("");
+      setEditDescription("");
+      setEditUrl("");
+    }
+  }, [editName, editDescription, editUrl]);
+
+  const onCloseNewOption = useCallback(() => {
+    if (editId !== undefined) {
+      setEditName("");
+      setEditDescription("");
+      setEditUrl("");
+      setEditId(undefined);
+    }
+    setShowCreateNewOption(false);
+  }, [editId]);
+
   return (
     <div>
       <div className="absolute top-0 flex w-full justify-center pt-3 pr-3 pl-3">
@@ -85,7 +121,23 @@ export const EditDecisionList: FC = () => {
       </div>
       <div className="flex w-full justify-center">
         <div className="w-full max-w-4xl">
-          <OptionList data={data} isLoading={isLoading} />
+          <OptionList
+            data={data}
+            isLoading={isLoading}
+            onEdit={(id) => {
+              if (data === undefined) return;
+              for (let option of data) {
+                if (option.id === id) {
+                  setEditId(option.id);
+                  setEditName(option.name);
+                  setEditDescription(option.description || "");
+                  setEditUrl(option.url || "");
+                  setShowCreateNewOption(true);
+                  return;
+                }
+              }
+            }}
+          />
         </div>
       </div>
       <div className="h-24 w-full" />
@@ -109,11 +161,15 @@ export const EditDecisionList: FC = () => {
       <div className="flex w-full justify-center">
         <CreateNewOptionPanel
           show={showCreateNewOption}
-          close={() => setShowCreateNewOption(false)}
-          submit={mutate}
-          initialName=""
-          initialDescription=""
-          initialUrl=""
+          close={onCloseNewOption}
+          submit={onSubmitNewOption}
+          id={editId}
+          name={editName}
+          description={editDescription}
+          url={editUrl}
+          setName={setEditName}
+          setDescription={setEditDescription}
+          setUrl={setEditUrl}
         />
       </div>
     </div>
@@ -123,6 +179,7 @@ export const EditDecisionList: FC = () => {
 interface OptionListProps {
   data: DecisionOption[] | undefined;
   isLoading: boolean;
+  onEdit: (id: number) => void;
 }
 interface DecisionOption {
   id?: number;
@@ -130,9 +187,10 @@ interface DecisionOption {
   description?: string;
   url?: string;
   isDeleted?: boolean;
+  isOptimistic?: boolean;
 }
 
-const OptionList: FC<OptionListProps> = ({ data, isLoading }) => {
+const OptionList: FC<OptionListProps> = ({ data, isLoading, onEdit }) => {
   if (isLoading) {
     return (
       <div className="text-center">
@@ -162,7 +220,13 @@ const OptionList: FC<OptionListProps> = ({ data, isLoading }) => {
             <span className="float-right mt-1 mr-2 inline cursor-pointer text-lg">
               <AiOutlineDelete />
             </span>
-            <span className="float-right mt-1 mr-6 inline cursor-pointer text-lg">
+            <span
+              className="float-right mt-1 mr-6 inline cursor-pointer text-lg"
+              onClick={() => {
+                if (option.isOptimistic || option.id === undefined) return; // don't let the user update optimistic options
+                onEdit(option.id);
+              }}
+            >
               <AiOutlineEdit />
             </span>
           </li>
@@ -175,25 +239,29 @@ const OptionList: FC<OptionListProps> = ({ data, isLoading }) => {
 interface CreateNewOptionPanelProps {
   show: boolean;
   close: () => void;
-  submit: (data: DecisionOption) => void;
-  initialName: string;
-  initialDescription: string;
-  initialUrl: string;
+  submit: () => void;
+  id: number | undefined;
+  name: string;
+  description: string;
+  url: string;
+  setName: React.Dispatch<React.SetStateAction<string>>;
+  setDescription: React.Dispatch<React.SetStateAction<string>>;
+  setUrl: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const CreateNewOptionPanel: FC<CreateNewOptionPanelProps> = ({
   show,
   close,
   submit,
-  initialName,
-  initialDescription,
-  initialUrl,
+  id,
+  name,
+  description,
+  url,
+  setName,
+  setDescription,
+  setUrl,
 }) => {
-  const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState(initialDescription);
-  const [url, setUrl] = useState(initialUrl);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
-  const toastIdRef = useRef<Id | null>(null);
 
   return (
     <Transition
@@ -211,7 +279,9 @@ const CreateNewOptionPanel: FC<CreateNewOptionPanelProps> = ({
         }
       }}
     >
-      <div className="text-xl">Create a new option</div>
+      <div className="text-xl">
+        {id === undefined ? "Create a new option" : "Edit option"}
+      </div>
       <input
         ref={nameInputRef}
         type="text"
@@ -236,21 +306,7 @@ const CreateNewOptionPanel: FC<CreateNewOptionPanelProps> = ({
       <button
         className="absolute bottom-5 right-10 h-10 w-10 rounded-full p-1 text-center text-2xl shadow-sm shadow-gray-400 hover:shadow-none"
         onClick={() => {
-          if (toastIdRef.current !== null) {
-            toast.dismiss(toastIdRef.current);
-          }
-          if (name === "") {
-            toastIdRef.current = toast.error("Name cannot be empty");
-          } else {
-            submit({
-              name,
-              description: description || undefined,
-              url: url || undefined,
-            });
-            setName("");
-            setDescription("");
-            setUrl("");
-          }
+          submit();
           if (nameInputRef.current !== null) {
             nameInputRef.current.focus();
           }
