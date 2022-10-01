@@ -1,6 +1,6 @@
 import { Transition } from "@headlessui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AiOutlineCheck,
   AiOutlineClose,
@@ -25,6 +25,9 @@ export const EditDecisionList: FC = () => {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editUrl, setEditUrl] = useState("");
+
+  const [isMultiplayer, setIsMultiplayer] = useState(false);
+
   const toastIdRef = useRef<Id | null>(null);
 
   const { data, isLoading } = useQuery<DecisionOption[], Error>(
@@ -163,6 +166,57 @@ export const EditDecisionList: FC = () => {
     }
   );
 
+  const {
+    mutate: makeMultiplayer,
+    data: lobbyCode,
+    isLoading: isLoadingMultiplayer,
+  } = useMutation<string, Error>(
+    async () => {
+      let res = await request(
+        `/api/decisionList/${decisionList.id}/createLobby`,
+        {
+          method: "POST",
+        }
+      );
+      if (!res.ok) {
+        throw new Error((await res.json()).message);
+      }
+      return await res.text();
+    },
+    {
+      onMutate: async () => {
+        setIsMultiplayer(true);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+        setIsMultiplayer(false);
+      },
+    }
+  );
+  const { mutate: makeSingleplayer } = useMutation<string, Error>(
+    async () => {
+      let res = await request(
+        `/api/decisionList/${decisionList.id}/deleteLobby`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!res.ok) {
+        throw new Error((await res.json()).message);
+      }
+      return await res.text();
+    },
+    {
+      onMutate: async () => {
+        setIsMultiplayer(false);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+        setIsMultiplayer(true);
+      },
+    }
+  );
+
   const onSubmitNewOption = useCallback(() => {
     if (toastIdRef.current !== null) {
       toast.dismiss(toastIdRef.current);
@@ -205,8 +259,17 @@ export const EditDecisionList: FC = () => {
     <div>
       <div className="absolute top-0 flex w-full justify-center pt-3 pr-3 pl-3">
         <div className="w-full max-w-4xl">
-          <button className="h-10 w-9/12 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none">
-            Singleplayer
+          <button
+            onClick={() => {
+              if (isMultiplayer) {
+                makeSingleplayer();
+              } else {
+                makeMultiplayer();
+              }
+            }}
+            className="h-10 w-9/12 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
+          >
+            {isMultiplayer ? "Multiplayer" : "Singleplayer"}
           </button>
         </div>
       </div>
@@ -215,6 +278,17 @@ export const EditDecisionList: FC = () => {
           {decisionList.question}
         </h1>
       </div>
+      {isMultiplayer ? (
+        <div className="flex w-full justify-center">
+          <div className="w-full max-w-4xl text-center text-4xl">
+            {isLoadingMultiplayer ? (
+              <Spinner className="-ml-1 mr-3 inline-block h-5 w-5 animate-spin text-black" />
+            ) : (
+              <LobbyCode code={lobbyCode} />
+            )}
+          </div>
+        </div>
+      ) : null}
       <div className="flex w-full justify-center">
         <div className="w-full max-w-4xl">
           <OptionList
@@ -434,5 +508,23 @@ const CreateNewOptionPanel: FC<CreateNewOptionPanelProps> = ({
         </div>
       </button>
     </Transition>
+  );
+};
+
+export const LobbyCode: FC<{ code: string | undefined }> = ({ code }) => {
+  if (code === undefined) return null;
+  return (
+    <div>
+      {code.split("").map((char, index) => (
+        <span
+          key={`char-${index}`}
+          className={
+            char[0] >= "0" && char[0] <= "9" ? "text-blue-700" : "text-black"
+          }
+        >
+          {char}
+        </span>
+      ))}
+    </div>
   );
 };
