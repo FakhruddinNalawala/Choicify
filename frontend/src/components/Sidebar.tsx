@@ -44,7 +44,7 @@ export const Sidebar: FC = () => {
   if (!data) return null;
 
   return (
-    <div className="absolute top-0 right-0 z-10 min-h-[100px] min-w-[100px]">
+    <div className="fixed top-0 right-0 z-50 min-h-[100px] min-w-[100px]">
       <Transition
         show={!show}
         enter="transition-opacity duration-200"
@@ -57,7 +57,7 @@ export const Sidebar: FC = () => {
       >
         <img
           src={`/api/profile/picture/${data.id}.svg`}
-          className={`mr-4 mt-4 ml-auto h-16 w-16 rounded-full shadow-md shadow-gray-400 transition-transform duration-200 hover:cursor-pointer hover:shadow-none`}
+          className={`mr-4 mt-4 ml-auto h-16 w-16 rounded-full shadow-md shadow-gray-400 transition-transform duration-200 hover:cursor-pointer hover:shadow-none bg-white`}
           onClick={() => {
             setShow((state) => !state);
           }}

@@ -92,7 +92,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String randomSeed = new String(randomByteArray, StandardCharsets.UTF_8);
         RestTemplate restTemplate = new RestTemplateBuilder().build();
         ResponseEntity<ByteArrayResource> response =
-                restTemplate.getForEntity("https://avatars.dicebear.com/api/bottts/" + randomSeed + ".svg" ,
+                restTemplate.getForEntity("https://avatars.dicebear.com/api/bottts/" + randomSeed + ".svg",
                         ByteArrayResource.class);
         if (response.getBody() != null) {
             String path = "./files/profile_pictures/" + userDB.getId() + ".svg";
