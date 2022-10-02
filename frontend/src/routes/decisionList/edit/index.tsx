@@ -271,7 +271,6 @@ export const EditDecisionList: FC = () => {
     }
     return () => {
       if (pusher !== undefined) {
-        // makeSingleplayer();
         pusher.disconnect();
         pusher = undefined;
         setPlayers([]);

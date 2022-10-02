@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface LobbyRepository extends JpaRepository<Lobby, Long> {
-    Optional<Lobby> deleteByDecisionList(DecisionList decisionList);
+    Optional<Integer> deleteByDecisionList(DecisionList decisionList);
     Optional<Lobby> getLobbyByLobbyCode(String lobbyCode);
 
     Optional<Lobby> getLobbyByDecisionList(DecisionList decisionList);

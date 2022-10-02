@@ -84,6 +84,10 @@ export const Lobby: FC = () => {
             navigate("/");
           }
         });
+        presenceChannel.bind("lobby-deleted", () => {
+          toast.info("The lobby has been deleted by the owner");
+          navigate("/");
+        });
       }
     }
     return () => {

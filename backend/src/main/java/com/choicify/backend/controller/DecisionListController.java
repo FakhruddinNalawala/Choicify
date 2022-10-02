@@ -153,13 +153,18 @@ public class DecisionListController {
     @PreAuthorize("hasRole('USER')")
     public boolean deleteListLobby(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        Optional<Lobby> lobbyToDelete = lobbyRepository.getLobbyByDecisionList(decisionList);
+        if (lobbyToDelete.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found");
+        }
         lobbyRepository.deleteByDecisionList(decisionList);
+        pusherInstance.getPusher().trigger("presence-lobby-" + lobbyToDelete.get().getId(), "lobby-deleted", "");
         return true;
     }
 
     private DecisionList getDecisionListFromDb(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         Optional<DecisionList> decisionList = decisionListRepository.findById(id);
-        if (!decisionList.isPresent()) {
+        if (decisionList.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the decision list");
         }
         if (!Objects.equals(decisionList.get().getUser().getId(), userPrincipal.getUser().getId())) {
@@ -170,7 +175,7 @@ public class DecisionListController {
 
     private void checkAndSendUpdateToPlayers(DecisionList decisionList) {
         Optional<Lobby> lobby = lobbyRepository.getLobbyByDecisionList(decisionList);
-        if (!lobby.isPresent())
+        if (lobby.isEmpty())
             return;
         pusherInstance.getPusher().trigger("presence-lobby-" + lobby.get().getId(), "options-update", "Option change");
     }
