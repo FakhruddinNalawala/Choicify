@@ -22,7 +22,7 @@ interface Lobby {
 export const Lobby: FC = () => {
   const lobby = useLoaderData() as Lobby;
   const [players, setPlayers] = useState<LobbyPlayer[]>([]);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const queryClient = useQueryClient();
 
@@ -78,12 +78,12 @@ export const Lobby: FC = () => {
         presenceChannel.bind("options-update", () => {
           queryClient.invalidateQueries([`options-${lobby.id}`]);
         });
-        // presenceChannel.bind("remove-user", (id: number) => {
-        //   if (id === presenceChannel.members.me.id) {
-        //     toast.info("You have been kicked from the lobby");
-        //     navigate("/");
-        //   }
-        // });
+        presenceChannel.bind("remove-user", (id: number) => {
+          if (id === presenceChannel.members.me.id) {
+            toast.info("You have been kicked from the lobby");
+            navigate("/");
+          }
+        });
       }
     }
     return () => {
@@ -91,6 +91,7 @@ export const Lobby: FC = () => {
         pusher.disconnect();
         pusher = undefined;
         setPlayers([]);
+        console.log("hi");
       }
     };
   }, [lobby]);

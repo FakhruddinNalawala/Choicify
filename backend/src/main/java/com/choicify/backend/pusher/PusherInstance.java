@@ -1,7 +1,6 @@
 package com.choicify.backend.pusher;
 
 import com.pusher.rest.Pusher;
-import org.springframework.beans.factory.annotation.Value;
 
 public class PusherInstance {
     private static Pusher pusher;
