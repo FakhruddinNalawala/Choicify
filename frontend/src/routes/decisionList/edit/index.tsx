@@ -278,6 +278,12 @@ export const EditDecisionList: FC = () => {
     };
   }, [lobby]);
 
+  useOnUnmount(() => {
+    if (isMultiplayer) {
+      makeSingleplayer();
+    }
+  }, [isMultiplayer]);
+
   const disconnectUser = async (id: number, prevPlayers: LobbyPlayer[]) => {
     if (lobby === undefined) return;
     let requested = request(`/api/lobby/${lobby.id}/terminate/${id}`, {
@@ -665,5 +671,23 @@ export const PlayerList: FC<{
         ))}
       </div>
     </div>
+  );
+};
+
+const useOnUnmount = (callback: () => void, dependencies: any[]) => {
+  const isUnmounting = useRef(false);
+  useEffect(() => {
+    isUnmounting.current = false;
+    return () => {
+      isUnmounting.current = true;
+    };
+  }, []);
+  useEffect(
+    () => () => {
+      if (isUnmounting.current) {
+        callback();
+      }
+    },
+    dependencies
   );
 };
