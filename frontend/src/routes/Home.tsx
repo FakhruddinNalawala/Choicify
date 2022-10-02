@@ -1,9 +1,12 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Transition } from "@headlessui/react";
 import "./Home.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Home: FC = () => {
+  const [lobbyCode, setLobbyCode] = useState("");
+  const navigate = useNavigate();
+
   return (
     <div className="flex h-screen flex-col items-center justify-center">
       <div
@@ -16,10 +19,13 @@ export const Home: FC = () => {
         style={{ fontFamily: "'Dangrek', cursive" }}
         placeholder="Tournament ID"
         className="mb-7 h-10 w-56 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none lg:w-64"
+        value={lobbyCode}
+        onChange={(e) => setLobbyCode(e.target.value)}
       />
       <button
         style={{ fontFamily: "'Dangrek', cursive" }}
         className="h-10 w-56 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none lg:w-64"
+        onClick={() => navigate(`/lobby/${lobbyCode}`)}
       >
         Join
       </button>

@@ -8,8 +8,11 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface LobbyRepository extends JpaRepository<Lobby, String> {
+public interface LobbyRepository extends JpaRepository<Lobby, Long> {
     Optional<Lobby> deleteByDecisionList(DecisionList decisionList);
+    Optional<Lobby> getLobbyByLobbyCode(String lobbyCode);
+
+    Optional<Lobby> getLobbyByDecisionList(DecisionList decisionList);
 }
 
 //    @Query("SELECT p FROM Person p JOIN FETCH p.roles WHERE p.id = (:id)")

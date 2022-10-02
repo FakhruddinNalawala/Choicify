@@ -18,10 +18,7 @@ public class Lobby {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @OneToMany(mappedBy = "lobby", targetEntity = Guest.class, fetch = FetchType.LAZY)
-    private Set<Guest> guests;
-
-    @ManyToOne
+    @OneToOne
     @JsonIgnore
     @JoinColumn(name = "decision_list_id", nullable = false)
     private DecisionList decisionList;

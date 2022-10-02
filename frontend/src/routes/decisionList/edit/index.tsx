@@ -1,6 +1,7 @@
 import { Transition } from "@headlessui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Pusher, { Members, PresenceChannel } from "pusher-js";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import {
   AiOutlineCheck,
   AiOutlineClose,
@@ -10,8 +11,9 @@ import {
 import { useLoaderData } from "react-router-dom";
 import { Id, toast } from "react-toastify";
 import { Spinner } from "../../../components/Spinner";
-import { request } from "../../../utils/sessionUtils";
+import { getToken, request } from "../../../utils/sessionUtils";
 
+let pusher: Pusher | undefined;
 interface DecisionList {
   id: number;
   question: string;
@@ -27,6 +29,10 @@ export const EditDecisionList: FC = () => {
   const [editUrl, setEditUrl] = useState("");
 
   const [isMultiplayer, setIsMultiplayer] = useState(false);
+
+  const [players, setPlayers] = useState<LobbyPlayer[]>([]);
+
+  const [mePlayer, setMePlayer] = useState<LobbyPlayer | undefined>(undefined);
 
   const toastIdRef = useRef<Id | null>(null);
 
@@ -168,9 +174,9 @@ export const EditDecisionList: FC = () => {
 
   const {
     mutate: makeMultiplayer,
-    data: lobbyCode,
+    data: lobby,
     isLoading: isLoadingMultiplayer,
-  } = useMutation<string, Error>(
+  } = useMutation<{ id: number; lobbyCode: string }, Error>(
     async () => {
       let res = await request(
         `/api/decisionList/${decisionList.id}/createLobby`,
@@ -181,7 +187,7 @@ export const EditDecisionList: FC = () => {
       if (!res.ok) {
         throw new Error((await res.json()).message);
       }
-      return await res.text();
+      return await res.json();
     },
     {
       onMutate: async () => {
@@ -214,8 +220,84 @@ export const EditDecisionList: FC = () => {
         toast.error(error.message);
         setIsMultiplayer(true);
       },
+      onSuccess: () => {
+        if (pusher !== undefined) {
+          pusher.disconnect();
+        }
+      },
     }
   );
+  useEffect(() => {
+    if (lobby === undefined) {
+      if (pusher !== undefined) {
+        pusher.disconnect();
+        pusher = undefined;
+        setPlayers([]);
+        setMePlayer(undefined);
+      }
+    } else {
+      if (pusher === undefined) {
+        pusher = new Pusher("6ade24dc33f072ea8a2e", {
+          cluster: "ap4",
+          userAuthentication: {
+            endpoint: "/api/pusher/auth",
+            transport: "ajax",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          },
+          channelAuthorization: {
+            endpoint: "/api/pusher/auth",
+            transport: "ajax",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          },
+        });
+      }
+      let presenceChannel: PresenceChannel = pusher.subscribe(
+        `presence-lobby-${lobby.id}`
+      ) as PresenceChannel;
+      presenceChannel.bind("pusher:subscription_succeeded", () => {
+        setMePlayer(presenceChannel.members.me);
+        setPlayers(Object.values(presenceChannel.members.members));
+      });
+      presenceChannel.bind("pusher:member_added", () => {
+        console.log("add");
+        setPlayers(Object.values(presenceChannel.members.members));
+      });
+      presenceChannel.bind("pusher:member_removed", () => {
+        console.log("remove");
+        setPlayers(Object.values(presenceChannel.members.members));
+      });
+    }
+    return () => {
+      if (pusher !== undefined) {
+        pusher.disconnect();
+        pusher = undefined;
+        setPlayers([]);
+      }
+    };
+  }, [lobby]);
+
+  const disconnectUser = async (id: number, prevPlayers: LobbyPlayer[]) => {
+    if (lobby === undefined) return;
+    let requested = request(`/api/lobby/${lobby.id}/terminate/${id}`, {
+      method: "POST",
+    });
+    let newPlayers = [...prevPlayers];
+    for (let i = 0; i < newPlayers.length; i++) {
+      if (newPlayers[i].id === id) {
+        newPlayers.splice(i, 1);
+        break;
+      }
+    }
+    // setPlayers(newPlayers);
+    let res = await requested;
+    if (res.ok) {
+      console.log(await res.text());
+    }
+  };
 
   const onSubmitNewOption = useCallback(() => {
     if (toastIdRef.current !== null) {
@@ -284,7 +366,7 @@ export const EditDecisionList: FC = () => {
             {isLoadingMultiplayer ? (
               <Spinner className="-ml-1 mr-3 inline-block h-5 w-5 animate-spin text-black" />
             ) : (
-              <LobbyCode code={lobbyCode} />
+              <LobbyCode code={lobby?.lobbyCode} />
             )}
           </div>
         </div>
@@ -311,6 +393,17 @@ export const EditDecisionList: FC = () => {
           />
         </div>
       </div>
+      {isMultiplayer ? (
+        <div className="mt-8 flex w-full justify-center pr-4 pl-4">
+          <div className="w-full max-w-4xl">
+            <PlayerList
+              players={players}
+              mePlayer={mePlayer}
+              onClickPlayer={disconnectUser}
+            />
+          </div>
+        </div>
+      ) : null}
       <div className="h-24 w-full" />
       <div className="fixed bottom-0 flex w-full justify-center pb-5 pr-3 pl-3">
         <div className="flex w-full max-w-4xl justify-between">
@@ -350,10 +443,10 @@ export const EditDecisionList: FC = () => {
 interface OptionListProps {
   data: DecisionOption[] | undefined;
   isLoading: boolean;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
-interface DecisionOption {
+export interface DecisionOption {
   id?: number;
   name: string;
   description?: string;
@@ -362,7 +455,7 @@ interface DecisionOption {
   isOptimistic?: boolean;
 }
 
-const OptionList: FC<OptionListProps> = ({
+export const OptionList: FC<OptionListProps> = ({
   data,
   isLoading,
   onEdit,
@@ -378,43 +471,47 @@ const OptionList: FC<OptionListProps> = ({
   if (!data) {
     return <div>Error loading the options</div>;
   }
-  if (data.length === 0) {
-    return <div>Wow such empty</div>;
-  }
   return (
     <div>
       <div className="border-b-2 border-gray-300 pb-2 pl-5 text-xl">
         Options
       </div>
-      <ul>
-        {" "}
-        {data.map((option) => (
-          <li
-            key={`option-${option.id}`}
-            className="border-b-2 border-gray-300 p-1 pl-2 pr-2 hover:bg-gray-100"
-          >
-            <span className="inline">{option.name}</span>
-            <span
-              className="float-right mt-1 mr-2 inline cursor-pointer text-lg"
-              onClick={() => {
-                if (option.isOptimistic || option.id === undefined) return;
-                onDelete(option.id);
-              }}
+      {data.length === 0 ? (
+        <div className="mt-2 text-center">Wow such empty</div>
+      ) : (
+        <ul>
+          {data.map((option) => (
+            <li
+              key={`option-${option.id}`}
+              className="border-b-2 border-gray-300 p-1 pl-2 pr-2 hover:bg-gray-100"
             >
-              <AiOutlineDelete />
-            </span>
-            <span
-              className="float-right mt-1 mr-6 inline cursor-pointer text-lg"
-              onClick={() => {
-                if (option.isOptimistic || option.id === undefined) return; // don't let the user update optimistic options
-                onEdit(option.id);
-              }}
-            >
-              <AiOutlineEdit />
-            </span>
-          </li>
-        ))}
-      </ul>
+              <span className="inline">{option.name}</span>
+              {onDelete !== undefined ? (
+                <span
+                  className="float-right mt-1 mr-2 inline cursor-pointer text-lg"
+                  onClick={() => {
+                    if (option.isOptimistic || option.id === undefined) return;
+                    onDelete(option.id);
+                  }}
+                >
+                  <AiOutlineDelete />
+                </span>
+              ) : null}
+              {onEdit !== undefined ? (
+                <span
+                  className="float-right mt-1 mr-6 inline cursor-pointer text-lg"
+                  onClick={() => {
+                    if (option.isOptimistic || option.id === undefined) return; // don't let the user update optimistic options
+                    onEdit(option.id);
+                  }}
+                >
+                  <AiOutlineEdit />
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
@@ -525,6 +622,50 @@ export const LobbyCode: FC<{ code: string | undefined }> = ({ code }) => {
           {char}
         </span>
       ))}
+    </div>
+  );
+};
+
+export interface LobbyPlayer {
+  id: number;
+  name: string;
+}
+
+export const PlayerList: FC<{
+  players: LobbyPlayer[];
+  mePlayer?: LobbyPlayer;
+  onClickPlayer?: (id: number, players: LobbyPlayer[]) => void;
+}> = ({ players, mePlayer, onClickPlayer }) => {
+  const extraStyle: string | null =
+    mePlayer !== undefined ? "cursor-pointer" : "cursor-not-allowed";
+  return (
+    <div>
+      <div className="pb-2 pl-5 text-xl">Players</div>
+      <div className="flex flex-wrap">
+        {players.map((player) => (
+          <div
+            className={`m-1 rounded-2xl border-2 border-gray-500 p-1 shadow-sm shadow-gray-400 ${
+              mePlayer?.id === player.id ? "cursor-not-allowed" : extraStyle
+            }`}
+            key={`player-${player.id}`}
+            onClick={() => {
+              if (
+                onClickPlayer === undefined ||
+                mePlayer === undefined ||
+                mePlayer.id === player.id
+              )
+                return;
+              onClickPlayer(player.id, players);
+            }}
+          >
+            <img
+              src={`/api/profile/picture/${player.id}.svg`}
+              className={`mr-2 ml-2 inline-block h-8 w-8 rounded-full bg-white`}
+            />
+            <span className="mr-2 inline-block">{player.name}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
