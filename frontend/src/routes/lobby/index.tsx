@@ -91,7 +91,6 @@ export const Lobby: FC = () => {
         pusher.disconnect();
         pusher = undefined;
         setPlayers([]);
-        console.log("hi");
       }
     };
   }, [lobby]);

@@ -263,16 +263,15 @@ export const EditDecisionList: FC = () => {
         setPlayers(Object.values(presenceChannel.members.members));
       });
       presenceChannel.bind("pusher:member_added", () => {
-        console.log("add");
         setPlayers(Object.values(presenceChannel.members.members));
       });
       presenceChannel.bind("pusher:member_removed", () => {
-        console.log("remove");
         setPlayers(Object.values(presenceChannel.members.members));
       });
     }
     return () => {
       if (pusher !== undefined) {
+        // makeSingleplayer();
         pusher.disconnect();
         pusher = undefined;
         setPlayers([]);
@@ -292,10 +291,10 @@ export const EditDecisionList: FC = () => {
         break;
       }
     }
-    // setPlayers(newPlayers);
+    setPlayers(newPlayers);
     let res = await requested;
-    if (res.ok) {
-      console.log(await res.text());
+    if (!res.ok) {
+      setPlayers([...prevPlayers]);
     }
   };
 
