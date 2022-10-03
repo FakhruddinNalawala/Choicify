@@ -1,17 +1,16 @@
 package com.choicify.backend.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 @Embeddable
-@Table(name = "player")
 class PlayerKey implements Serializable {
 
     @Column(name = "User_ID")
@@ -24,18 +23,19 @@ class PlayerKey implements Serializable {
 @Getter
 @Setter
 @Entity
+@Table(name = "player")
 public class Player {
 
-    @EmbeddedId
-    PlayerKey id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false)
+    Long id;
 
     @ManyToOne
-    @MapsId("userId")
     @JoinColumn(name = "User_ID")
     User user;
 
     @ManyToOne
-    @MapsId("tournamentId")
     @JoinColumn(name = "Tournament_ID")
     Tournament tournament;
 

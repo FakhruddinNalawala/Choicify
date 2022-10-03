@@ -215,6 +215,7 @@ export const EditDecisionList: FC = () => {
     {
       onMutate: async () => {
         setIsMultiplayer(false);
+        setPlayers([]);
       },
       onError: (error) => {
         toast.error(error.message);
@@ -227,6 +228,32 @@ export const EditDecisionList: FC = () => {
       },
     }
   );
+
+  const { mutate: startTournament, isLoading: creatingNewTournament } =
+    useMutation<number, Error>(
+      async () => {
+        let res = await request("/api/tournament/new", {
+          method: "POST",
+          body: JSON.stringify({
+            decisionListId: decisionList.id,
+            playerIds: players.map((player) => player.id),
+          }),
+        });
+        if (!res.ok) {
+          throw new Error((await res.json()).message);
+        }
+        return await res.json();
+      },
+      {
+        onError: (error) => {
+          toast.error(error.message);
+        },
+        onSuccess: (data) => {
+          console.log(data);
+        },
+      }
+    );
+
   useEffect(() => {
     if (lobby === undefined) {
       if (pusher !== undefined) {
@@ -412,9 +439,14 @@ export const EditDecisionList: FC = () => {
       <div className="fixed bottom-0 flex w-full justify-center pb-5 pr-3 pl-3">
         <div className="flex w-full max-w-4xl justify-between">
           <button
+            disabled={isLoading}
             style={{ width: "48%" }}
             className="h-10 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
+            onClick={() => startTournament()}
           >
+            {isLoading ? (
+              <Spinner className="-ml-1 mr-3 inline-block h-5 w-5 animate-spin text-black" />
+            ) : null}
             Start Tournament
           </button>
           <button

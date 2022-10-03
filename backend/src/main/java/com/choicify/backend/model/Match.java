@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "match_table")
+@Table(name = "match_table", indexes = {@Index(columnList = "tournament_id, match_index")})
 public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -20,21 +20,24 @@ public class Match {
     private Tournament tournament;
 
     @ManyToOne
-    @JoinColumn(name = "option_1", nullable = false)
+    @JoinColumn(name = "option_1", nullable = true)
     private Option option1;
 
     @ManyToOne
-    @JoinColumn(name = "option_2", nullable = false)
+    @JoinColumn(name = "option_2", nullable = true)
     private Option option2;
 
     @ManyToOne
     @JoinColumn(name = "winner", nullable = true)
     private Option winner;
 
-    private Long winningVotes;
+    @Column(name = "match_index", nullable = false)
+    private Long matchIndex;
 
-    private Long losingVotes;
+    private Long votesFor1;
 
-    private Boolean isMultiplayer;
+    private Long votesFor2;
+
+    private Long totalVotes;
 
 }
