@@ -18,8 +18,8 @@ public class Tournament {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @OneToMany(mappedBy = "tournament", targetEntity = Player.class, fetch = FetchType.LAZY)
-    private Set<Player> players;
+    @Column(nullable = false)
+    private Long playerCount;
 
     @ManyToOne
     @JoinColumn(name = "decision_list_id", nullable = false)

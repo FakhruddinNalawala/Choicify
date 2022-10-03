@@ -78,6 +78,7 @@ public class TournamentController {
         tournament.setDeleted(false);
         tournament.setCurrentMatchIndex(-1L);
         tournament.setPrimaryUser(userPrincipal.getUser());
+        tournament.setPlayerCount(isMultiplayer ? (long) players.size() : 1L);
         Tournament tournamentDb = tournamentRepository.save(tournament);
         for (Player player : players) {
             player.setTournament(tournamentDb);
