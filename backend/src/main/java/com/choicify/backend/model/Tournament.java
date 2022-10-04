@@ -1,5 +1,6 @@
 package com.choicify.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.type.LocalDateTimeType;
@@ -33,6 +34,7 @@ public class Tournament {
     private Option winner;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "primary_user_id", nullable = false)
     private User primaryUser;
 

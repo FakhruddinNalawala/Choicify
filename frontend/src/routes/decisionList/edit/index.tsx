@@ -8,7 +8,7 @@ import {
   AiOutlineDelete,
   AiOutlineEdit,
 } from "react-icons/ai";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { Id, toast } from "react-toastify";
 import { Spinner } from "../../../components/Spinner";
 import { getToken, request } from "../../../utils/sessionUtils";
@@ -21,6 +21,7 @@ interface DecisionList {
 
 export const EditDecisionList: FC = () => {
   const decisionList = useLoaderData() as DecisionList;
+  const navigate = useNavigate();
   const [showCreateNewOption, setShowCreateNewOption] = useState(false);
 
   const [editId, setEditId] = useState<number | undefined>(undefined);
@@ -248,8 +249,10 @@ export const EditDecisionList: FC = () => {
         onError: (error) => {
           toast.error(error.message);
         },
-        onSuccess: (data) => {
-          console.log(data);
+        onSuccess: (tournamentId) => {
+          if (!isMultiplayer) {
+            navigate(`/tournament/play/${tournamentId}`);
+          }
         },
       }
     );
@@ -294,6 +297,9 @@ export const EditDecisionList: FC = () => {
       });
       presenceChannel.bind("pusher:member_removed", () => {
         setPlayers(Object.values(presenceChannel.members.members));
+      });
+      presenceChannel.bind("tournament-started", (id: number) => {
+        navigate(`/tournament/play/${id}`);
       });
     }
     return () => {
@@ -485,8 +491,8 @@ interface OptionListProps {
 export interface DecisionOption {
   id?: number;
   name: string;
-  description?: string;
-  url?: string;
+  description?: string | null;
+  url?: string | null;
   isDeleted?: boolean;
   isOptimistic?: boolean;
 }

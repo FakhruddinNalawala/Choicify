@@ -40,4 +40,6 @@ public class Player {
     Tournament tournament;
 
     boolean isPrimary;
+
+    boolean hasVoted;
 }
