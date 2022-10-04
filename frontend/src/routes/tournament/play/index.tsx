@@ -192,7 +192,6 @@ export const PlayTournament: FC = () => {
         presenceChannel.bind(
           "match-finished",
           ({ id, wasFinal }: { id: number; wasFinal: boolean }) => {
-            console.log({ id, wasFinal });
             getWinner(id);
             fetchNextMatch(wasFinal);
             getVoteCount(wasFinal);
