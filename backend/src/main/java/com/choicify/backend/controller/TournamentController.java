@@ -75,6 +75,14 @@ class MatchWinner {
     private Boolean isFinal;
 }
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class MatchFinishedMessage {
+    private Long id;
+    private Boolean wasFinal;
+}
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api")
@@ -359,7 +367,7 @@ public class TournamentController {
             finishMatchSemaphore.release();
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot finish a match with 1 option missing");
         }
-        Option winner = null;
+        Option winner;
         if (Objects.equals(m.getVotesFor1(), m.getVotesFor2())) {
             Random randomGenerator = new Random();
             if (randomGenerator.nextInt(2) == 0) {
@@ -376,9 +384,7 @@ public class TournamentController {
         for (Player player : players) {
             player.setHasVoted(false);
         }
-        boolean isTournamentWinner = true;
         if (t.getCurrentMatchIndex() > 1) {
-            isTournamentWinner = false;
             t.setCurrentMatchIndex(t.getCurrentMatchIndex() - 1);
             Long newMatchIndex = m.getMatchIndex() / 2;
             Optional<Match> newOptionalMatch = matchRepository.findByTournamentAndMatchIndex(t, newMatchIndex);
@@ -392,13 +398,17 @@ public class TournamentController {
             } else {
                 newMatch.setOption2(winner);
             }
-            matchRepository.save(newMatch);
-            tournamentRepository.save(t);
+            matchRepository.saveAndFlush(newMatch);
+        } else {
+            t.setEndTime(new Date().getTime());
+            t.setWinner(winner);
         }
+        tournamentRepository.saveAndFlush(t);
         m.setWinner(winner);
-        matchRepository.save(m);
-        playerRepository.saveAll(players);
-        pusherInstance.getPusher().trigger("presence-tournament-" + t.getId(), "match-finished", m.getId());
+        matchRepository.saveAndFlush(m);
+        playerRepository.saveAllAndFlush(players);
+        pusherInstance.getPusher().trigger("presence-tournament-" + t.getId(), "match-finished",
+                new MatchFinishedMessage(m.getId(), m.isFinal()));
         finishMatchSemaphore.release();
         return true;
     }
@@ -468,8 +478,8 @@ public class TournamentController {
             match.setVotesFor1(0L);
             match.setVotesFor2(0L);
             match.setTotalVotes(0L);
-            match.setMatchIndex(matchIndex--);
             match.setFinal(matchIndex == 1);
+            match.setMatchIndex(matchIndex--);
             if (optionIndex < options.size())
                 match.setOption2(options.get(optionIndex++));
             if (optionIndex < options.size())

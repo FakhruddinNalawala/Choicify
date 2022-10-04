@@ -3,6 +3,7 @@ import Pusher, { PresenceChannel } from "pusher-js";
 import { FC, useEffect, useState } from "react";
 import { useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Spinner } from "../../../components/Spinner";
 import { getToken, request } from "../../../utils/sessionUtils";
 import { DecisionOption, LobbyPlayer } from "../../decisionList/edit";
 
@@ -16,6 +17,7 @@ interface Match {
   votesFor2: number;
   winner: DecisionOption | null;
   totalVotes: number;
+  isFinal: boolean;
 }
 
 interface Tournament {
@@ -66,11 +68,29 @@ export const PlayTournament: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [winner, setWinner] = useState<IWinner | undefined>(undefined);
 
-  const [currentMatch, setCurrentMatch] = useState(tournament.currentMatch);
+  const [currentMatch, setCurrentMatch] = useState<Match | undefined>(
+    tournament.currentMatch
+  );
+  const [loadingCurrentMatch, setLoadingCurrentMatch] = useState(false);
 
   const [showFinishMatchScreen, setShowFinishMatchScreen] = useState(false);
 
-  const getVoteCount = async () => {
+  const fetchNextMatch = async (isFinal: boolean = false) => {
+    if (isFinal) return;
+    setLoadingCurrentMatch(true);
+    setCurrentMatch(undefined);
+    let res = await request(`/api/tournament/${tournament.id}/match`);
+    if (!res.ok) {
+      toast.error((await res.json()).message);
+    } else {
+      let nextMatch: Match = await res.json();
+      setCurrentMatch(nextMatch);
+      setLoadingCurrentMatch(false);
+    }
+  };
+
+  const getVoteCount = async (isFinal: boolean = false) => {
+    if (isFinal) return;
     let res = await request(`/api/tournament/${tournament.id}/votes`);
     if (!res.ok) {
       toast.error((await res.json()).message);
@@ -115,7 +135,8 @@ export const PlayTournament: FC = () => {
     }
   };
 
-  const getPlayers = async () => {
+  const getPlayers = async (isFinal: boolean = false) => {
+    if (isFinal) return;
     let res = await request(`/api/tournament/${tournament.id}/players`);
     if (!res.ok) {
       toast.error((await res.json()).message);
@@ -168,9 +189,16 @@ export const PlayTournament: FC = () => {
           getVoteCount();
           getPlayers();
         });
-        presenceChannel.bind("match-finished", (id: number) => {
-          getWinner(id);
-        });
+        presenceChannel.bind(
+          "match-finished",
+          ({ id, wasFinal }: { id: number; wasFinal: boolean }) => {
+            console.log({ id, wasFinal });
+            getWinner(id);
+            fetchNextMatch(wasFinal);
+            getVoteCount(wasFinal);
+            getPlayers(wasFinal);
+          }
+        );
       }
     }
     return () => {
@@ -188,8 +216,9 @@ export const PlayTournament: FC = () => {
           {tournament.question}
         </div>
       </div>
-      <div className="flex w-full justify-center">
-        <VoteCount votes={votes} />
+      {}
+      <div className="flex h-10 w-full justify-center">
+        {!showFinishMatchScreen ? <VoteCount votes={votes} /> : null}
       </div>
       <div className="flex w-full justify-center">
         {showFinishMatchScreen ? (
@@ -204,6 +233,17 @@ export const PlayTournament: FC = () => {
             ) : (
               <div>No data</div>
             )}
+            <div className="w-full text-center">
+              <button
+                onClick={() => {
+                  setHasVoted(false);
+                  setShowFinishMatchScreen(false);
+                }}
+                className="rounded-md border-2 border-gray-400 p-2 shadow-md shadow-gray-300 hover:bg-gray-50"
+              >
+                Go to next match
+              </button>
+            </div>
           </div>
         ) : hasVoted ? (
           <div className="w-full max-w-4xl">
@@ -230,11 +270,21 @@ export const PlayTournament: FC = () => {
           </div>
         ) : (
           <>
-            <MakeChoice
-              option1={currentMatch.option1}
-              option2={currentMatch.option2}
-              vote={vote}
-            />
+            {loadingCurrentMatch ? (
+              <div className="absolute bottom-0 w-full max-w-4xl p-5 pb-20">
+                <div className="flex w-full justify-center">
+                  <Spinner className="-ml-1 mr-3 inline-block h-24 w-24 animate-spin text-black" />
+                </div>
+              </div>
+            ) : currentMatch === undefined ? (
+              <div>Error getting the match</div>
+            ) : (
+              <MakeChoice
+                option1={currentMatch.option1}
+                option2={currentMatch.option2}
+                vote={vote}
+              />
+            )}
           </>
         )}
       </div>
