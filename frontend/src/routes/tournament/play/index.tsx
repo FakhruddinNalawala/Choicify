@@ -51,6 +51,7 @@ interface IWinner {
   option: DecisionOption;
   votes: number;
   totalVotes: number;
+  isFinal: boolean;
 }
 
 export const PlayTournament: FC = () => {
@@ -221,28 +222,36 @@ export const PlayTournament: FC = () => {
       </div>
       <div className="flex w-full justify-center">
         {showFinishMatchScreen ? (
-          <div className="mt-5">
+          <div className="mt-5 w-full max-w-4xl">
             {isLoading ? (
               <div>Loading results</div>
             ) : winner ? (
-              <div>
-                {winner.option.name} with {winner.votes} / {winner.totalVotes}{" "}
-                votes
-              </div>
+              winner.isFinal ? (
+                <div className="p-3 text-center text-4xl">
+                  The tournament winner is {winner.option.name}
+                </div>
+              ) : (
+                <div className="p-3 text-center text-2xl">
+                  {winner.option.name} with {winner.votes} / {winner.totalVotes}{" "}
+                  votes
+                </div>
+              )
             ) : (
               <div>No data</div>
             )}
-            <div className="w-full text-center">
-              <button
-                onClick={() => {
-                  setHasVoted(false);
-                  setShowFinishMatchScreen(false);
-                }}
-                className="rounded-md border-2 border-gray-400 p-2 shadow-md shadow-gray-300 hover:bg-gray-50"
-              >
-                Go to next match
-              </button>
-            </div>
+            {winner && winner.isFinal ? null : (
+              <div className="mt-3 w-full text-center">
+                <button
+                  onClick={() => {
+                    setHasVoted(false);
+                    setShowFinishMatchScreen(false);
+                  }}
+                  className="rounded-md border-2 border-gray-400 p-2 shadow-md shadow-gray-300 hover:bg-gray-50"
+                >
+                  Go to next match
+                </button>
+              </div>
+            )}
           </div>
         ) : hasVoted ? (
           <div className="w-full max-w-4xl">
