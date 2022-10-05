@@ -166,7 +166,7 @@ export const PlayTournament: FC = () => {
       }
     } else {
       if (pusher === undefined) {
-        pusher = new Pusher("6ade24dc33f072ea8a2e", {
+        pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
           cluster: "ap4",
           userAuthentication: {
             endpoint: "/api/pusher/auth",
