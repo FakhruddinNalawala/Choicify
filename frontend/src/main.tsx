@@ -19,6 +19,8 @@ import { NewDecisionList } from "./routes/decisionList/new";
 import { FullPageLoader } from "./components/FullPageLoader";
 import "react-toastify/dist/ReactToastify.css";
 import { EditDecisionList } from "./routes/decisionList/edit";
+import { Lobby } from "./routes/lobby";
+import { PlayTournament } from "./routes/tournament/play";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,28 @@ const router = createBrowserRouter([
           let res = await request(`/api/decisionList/${params.decisionListId}`);
           if (!res.ok) {
             return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
+          }
+          return await res.json();
+        },
+      },
+      {
+        path: "/lobby/:lobbyCode",
+        element: <Lobby />,
+        loader: async ({ params }) => {
+          let res = await request(`/api/lobby/${params.lobbyCode}`);
+          if (!res.ok) {
+            return redirect("/error"); // TODO: go to route showing that there was an error with the lobby
+          }
+          return await res.json();
+        },
+      },
+      {
+        path: "/tournament/play/:id",
+        element: <PlayTournament />,
+        loader: async ({ params }) => {
+          let res = await request(`/api/tournament/${params.id}`);
+          if (!res.ok) {
+            return redirect("/error"); // TODO: go to route showing that there was an error with the tournament
           }
           return await res.json();
         },

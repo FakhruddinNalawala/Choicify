@@ -11,6 +11,10 @@ export const removeToken = () => {
   accessTokenInternal = null;
 };
 
+export const getToken = () => {
+  return accessTokenInternal;
+}
+
 export const request: (
   input: RequestInfo | URL,
   init?: RequestInit | undefined
