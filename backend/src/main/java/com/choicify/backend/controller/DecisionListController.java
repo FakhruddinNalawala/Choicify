@@ -1,9 +1,12 @@
 package com.choicify.backend.controller;
 
 import com.choicify.backend.model.DecisionList;
+import com.choicify.backend.model.Lobby;
 import com.choicify.backend.model.Option;
 import com.choicify.backend.model.User;
+import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.DecisionListRepository;
+import com.choicify.backend.repository.LobbyRepository;
 import com.choicify.backend.repository.OptionRepository;
 import com.choicify.backend.repository.UserRepository;
 import com.choicify.backend.security.CurrentUser;
@@ -12,14 +15,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import javax.transaction.Transactional;
+import java.util.*;
 
 @Getter
 @Setter
@@ -43,6 +46,9 @@ class NewOptionBody {
 public class DecisionListController {
     private final DecisionListRepository decisionListRepository;
     private final OptionRepository optionRepository;
+    private final LobbyRepository lobbyRepository;
+
+    private final PusherInstance pusherInstance;
 
     @PostMapping("/decisionList/new")
     @PreAuthorize("hasRole('USER')")
@@ -81,7 +87,9 @@ public class DecisionListController {
         newOption.setDescription(body.getDescription());
         newOption.setUrl(body.getUrl());
         newOption.setDecisionList(decisionList);
-        return optionRepository.save(newOption);
+        Option dbOption = optionRepository.save(newOption);
+        checkAndSendUpdateToPlayers(decisionList);
+        return dbOption;
     }
 
     @PutMapping("/decisionList/{id}/options/{optionId}/edit")
@@ -95,7 +103,9 @@ public class DecisionListController {
         updateOption.setDescription(body.getDescription());
         updateOption.setUrl(body.getUrl());
         updateOption.setDecisionList(decisionList);
-        return optionRepository.save(updateOption);
+        Option dbOption = optionRepository.save(updateOption);
+        checkAndSendUpdateToPlayers(decisionList);
+        return dbOption;
     }
 
     @DeleteMapping("/decisionList/{id}/options/{optionId}/delete")
@@ -109,12 +119,52 @@ public class DecisionListController {
         }
         Option toDel = toDelete.get();
         toDel.setIsDeleted(true);
-        return optionRepository.save(toDel).getId();
+        Long delId = optionRepository.save(toDel).getId();
+        checkAndSendUpdateToPlayers(decisionList);
+        return delId;
+    }
+
+    @Transactional
+    @PostMapping("/decisionList/{id}/createLobby")
+    @PreAuthorize("hasRole('USER')")
+    public Lobby createNewLobby(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        lobbyRepository.deleteByDecisionList(decisionList);
+        Lobby lobby = new Lobby();
+        lobby.setDecisionList(decisionList);
+        Lobby newLobby = null;
+        for (int i = 0; i < 2; i++) {
+            String generatedString = RandomStringUtils.randomAlphanumeric(6);
+            lobby.setLobbyCode(generatedString.toUpperCase());
+            try {
+                newLobby = lobbyRepository.save(lobby);
+                break;
+            } catch (Exception ignored) {
+            }
+        }
+        if (newLobby == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not create lobby");
+        }
+        return newLobby;
+    }
+
+    @Transactional
+    @DeleteMapping("/decisionList/{id}/deleteLobby")
+    @PreAuthorize("hasRole('USER')")
+    public boolean deleteListLobby(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        Optional<Lobby> lobbyToDelete = lobbyRepository.getLobbyByDecisionList(decisionList);
+        if (lobbyToDelete.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found");
+        }
+        lobbyRepository.deleteByDecisionList(decisionList);
+        pusherInstance.getPusher().trigger("presence-lobby-" + lobbyToDelete.get().getId(), "lobby-deleted", "");
+        return true;
     }
 
     private DecisionList getDecisionListFromDb(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         Optional<DecisionList> decisionList = decisionListRepository.findById(id);
-        if (!decisionList.isPresent()) {
+        if (decisionList.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the decision list");
         }
         if (!Objects.equals(decisionList.get().getUser().getId(), userPrincipal.getUser().getId())) {
@@ -122,4 +172,12 @@ public class DecisionListController {
         }
         return decisionList.get();
     }
+
+    private void checkAndSendUpdateToPlayers(DecisionList decisionList) {
+        Optional<Lobby> lobby = lobbyRepository.getLobbyByDecisionList(decisionList);
+        if (lobby.isEmpty())
+            return;
+        pusherInstance.getPusher().trigger("presence-lobby-" + lobby.get().getId(), "options-update", "Option change");
+    }
+
 }

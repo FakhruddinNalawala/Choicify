@@ -8,6 +8,7 @@ import com.choicify.backend.security.UserPrincipal;
 import com.choicify.backend.security.oauth2.user.OAuth2UserInfo;
 import com.choicify.backend.security.oauth2.user.OAuth2UserInfoFactory;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
@@ -87,9 +88,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         User userDB = userRepository.save(user);
         // get random seed
-        byte[] randomByteArray = new byte[16];
-        new Random().nextBytes(randomByteArray);
-        String randomSeed = new String(randomByteArray, StandardCharsets.UTF_8);
+        String randomSeed = RandomStringUtils.randomAlphanumeric(20);
         RestTemplate restTemplate = new RestTemplateBuilder().build();
         ResponseEntity<ByteArrayResource> response =
                 restTemplate.getForEntity("https://avatars.dicebear.com/api/bottts/" + randomSeed + ".svg",

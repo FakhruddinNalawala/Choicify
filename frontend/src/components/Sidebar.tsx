@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { removeToken, request } from "../utils/sessionUtils";
 import { useQuery } from "@tanstack/react-query";
 import { Transition } from "@headlessui/react";
@@ -32,7 +32,6 @@ const PageButton: FC<PageButtonProps> = ({ icon, text, to, onClick }) => {
 
 export const Sidebar: FC = () => {
   const [show, setShow] = useState(false);
-  const navigate = useNavigate();
   const { data } = useQuery<any, Error>(["user-profile"], async () => {
     let res = await request("/api/profile", { credentials: "include" });
     if (!res.ok) {
@@ -57,7 +56,7 @@ export const Sidebar: FC = () => {
       >
         <img
           src={`/api/profile/picture/${data.id}.svg`}
-          className={`mr-4 mt-4 ml-auto h-16 w-16 rounded-full shadow-md shadow-gray-400 transition-transform duration-200 hover:cursor-pointer hover:shadow-none bg-white`}
+          className={`mr-4 mt-4 ml-auto h-16 w-16 rounded-full bg-white shadow-md shadow-gray-400 transition-transform duration-200 hover:cursor-pointer hover:shadow-none`}
           onClick={() => {
             setShow((state) => !state);
           }}
@@ -104,18 +103,16 @@ export const Sidebar: FC = () => {
             </span>
             <span className="inline">Close</span>
           </div>
-          <div
+          <Link
+            to={"/login"}
+            onClick={removeToken}
             className="absolute bottom-0 w-full cursor-pointer border-t-2 pt-3 pb-3 pl-3 text-center text-2xl"
-            onClick={() => {
-              removeToken();
-              navigate("/login");
-            }}
           >
             <span className="absolute left-4 flex justify-center align-middle">
               <FiLogOut />
             </span>
             <span className="inline">Log out</span>
-          </div>
+          </Link>
         </div>
       </Transition>
     </div>

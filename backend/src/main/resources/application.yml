@@ -27,3 +27,8 @@ app:
 server:
   error:
     include-message: always
+
+pusher:
+  appId: ${PUSHER_APP_ID}
+  key: ${PUSHER_KEY}
+  secret: ${PUSHER_SECRET}
