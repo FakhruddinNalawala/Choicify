@@ -2,10 +2,12 @@ package com.choicify.backend.controller;
 
 import com.choicify.backend.exception.ResourceNotFoundException;
 import com.choicify.backend.model.Lobby;
+import com.choicify.backend.model.Player;
 import com.choicify.backend.model.Tournament;
 import com.choicify.backend.model.User;
 import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.LobbyRepository;
+import com.choicify.backend.repository.PlayerRepository;
 import com.choicify.backend.repository.TournamentRepository;
 import com.choicify.backend.repository.UserRepository;
 import com.choicify.backend.security.CurrentUser;
@@ -26,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 @Data
@@ -53,6 +56,7 @@ public class UserController {
     private final PusherInstance pusherInstance;
     private final LobbyRepository lobbyRepository;
     private final TournamentRepository tournamentRepository;
+    private final PlayerRepository playerRepository;
 
     @GetMapping("/profile")
     @PreAuthorize("hasRole('USER')")
@@ -94,10 +98,15 @@ public class UserController {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bad channel ID");
             }
             Tournament t = tournament.get();
-            if (t.isDeleted() || !t.isMultiplayer()) {
+            if (t.isDeleted()) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tournament not available");
             }
-            // TODO: check that user is in tournament (via players table)
+            if (!Objects.equals(t.getPrimaryUser().getId(), userPrincipal.getId())) {
+                Optional<Player> player = playerRepository.findPlayerByTournamentAndUser(t, userPrincipal.getUser());
+                if (player.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot play in this tournament");
+                }
+            }
         }
         PusherPresenceUser userInfo =
                 new PusherPresenceUser(userPrincipal.getUser().getGivenName(), userPrincipal.getId());

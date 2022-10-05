@@ -1,7 +1,9 @@
 package com.choicify.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.type.LocalDateTimeType;
 
 import javax.persistence.*;
 import java.sql.Date;
@@ -17,26 +19,30 @@ public class Tournament {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @OneToMany(mappedBy = "tournament", targetEntity = Player.class, fetch = FetchType.LAZY)
-    private Set<Player> players;
+    @Column(nullable = false)
+    private Long playerCount;
 
     @ManyToOne
     @JoinColumn(name = "decision_list_id", nullable = false)
     private DecisionList decisionList;
 
-    @ManyToOne
-    @JoinColumn(name = "current_match")
-    private Match currentMatch;
+    @Column(nullable = false)
+    private Long currentMatchIndex;
 
     @ManyToOne
-    @JoinColumn(name = "winner")
+    @JoinColumn(name = "winner", nullable = true)
     private Option winner;
+
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "primary_user_id", nullable = false)
+    private User primaryUser;
 
     private boolean isDeleted;
 
-    private Date startTime;
+    private Long startTime;
 
-    private Date endTime;
+    private Long endTime;
 
     private boolean isMultiplayer;
 }

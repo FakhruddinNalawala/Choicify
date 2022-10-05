@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Pusher, { Members, PresenceChannel } from "pusher-js";
+import Pusher, { PresenceChannel } from "pusher-js";
 import { FC, useEffect, useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -87,6 +87,9 @@ export const Lobby: FC = () => {
         presenceChannel.bind("lobby-deleted", () => {
           toast.info("The lobby has been deleted by the owner");
           navigate("/");
+        });
+        presenceChannel.bind("tournament-started", (id: number) => {
+          navigate(`/tournament/play/${id}`);
         });
       }
     }

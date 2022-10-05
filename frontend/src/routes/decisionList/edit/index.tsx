@@ -8,7 +8,7 @@ import {
   AiOutlineDelete,
   AiOutlineEdit,
 } from "react-icons/ai";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { Id, toast } from "react-toastify";
 import { Spinner } from "../../../components/Spinner";
 import { getToken, request } from "../../../utils/sessionUtils";
@@ -21,6 +21,7 @@ interface DecisionList {
 
 export const EditDecisionList: FC = () => {
   const decisionList = useLoaderData() as DecisionList;
+  const navigate = useNavigate();
   const [showCreateNewOption, setShowCreateNewOption] = useState(false);
 
   const [editId, setEditId] = useState<number | undefined>(undefined);
@@ -215,6 +216,7 @@ export const EditDecisionList: FC = () => {
     {
       onMutate: async () => {
         setIsMultiplayer(false);
+        setPlayers([]);
       },
       onError: (error) => {
         toast.error(error.message);
@@ -227,6 +229,34 @@ export const EditDecisionList: FC = () => {
       },
     }
   );
+
+  const { mutate: startTournament, isLoading: creatingNewTournament } =
+    useMutation<number, Error>(
+      async () => {
+        let res = await request("/api/tournament/new", {
+          method: "POST",
+          body: JSON.stringify({
+            decisionListId: decisionList.id,
+            playerIds: players.map((player) => player.id),
+          }),
+        });
+        if (!res.ok) {
+          throw new Error((await res.json()).message);
+        }
+        return await res.json();
+      },
+      {
+        onError: (error) => {
+          toast.error(error.message);
+        },
+        onSuccess: (tournamentId) => {
+          if (!isMultiplayer) {
+            navigate(`/tournament/play/${tournamentId}`);
+          }
+        },
+      }
+    );
+
   useEffect(() => {
     if (lobby === undefined) {
       if (pusher !== undefined) {
@@ -267,6 +297,9 @@ export const EditDecisionList: FC = () => {
       });
       presenceChannel.bind("pusher:member_removed", () => {
         setPlayers(Object.values(presenceChannel.members.members));
+      });
+      presenceChannel.bind("tournament-started", (id: number) => {
+        navigate(`/tournament/play/${id}`);
       });
     }
     return () => {
@@ -412,9 +445,14 @@ export const EditDecisionList: FC = () => {
       <div className="fixed bottom-0 flex w-full justify-center pb-5 pr-3 pl-3">
         <div className="flex w-full max-w-4xl justify-between">
           <button
+            disabled={isLoading}
             style={{ width: "48%" }}
             className="h-10 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
+            onClick={() => startTournament()}
           >
+            {isLoading ? (
+              <Spinner className="-ml-1 mr-3 inline-block h-5 w-5 animate-spin text-black" />
+            ) : null}
             Start Tournament
           </button>
           <button
@@ -453,8 +491,8 @@ interface OptionListProps {
 export interface DecisionOption {
   id?: number;
   name: string;
-  description?: string;
-  url?: string;
+  description?: string | null;
+  url?: string | null;
   isDeleted?: boolean;
   isOptimistic?: boolean;
 }

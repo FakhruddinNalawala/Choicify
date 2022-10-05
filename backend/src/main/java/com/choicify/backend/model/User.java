@@ -41,7 +41,4 @@ public class User {
     private AuthProvider provider;
 
     private String providerId;
-
-    @OneToMany(mappedBy = "user", targetEntity = Player.class, fetch = FetchType.LAZY)
-    private Set<Player> players;
 }
