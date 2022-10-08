@@ -8,13 +8,12 @@ import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.DecisionListRepository;
 import com.choicify.backend.repository.LobbyRepository;
 import com.choicify.backend.repository.OptionRepository;
-import com.choicify.backend.repository.UserRepository;
+import com.choicify.backend.repository.TournamentRepository;
 import com.choicify.backend.security.CurrentUser;
 import com.choicify.backend.security.UserPrincipal;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.bytebuddy.implementation.bind.annotation.IgnoreForBinding;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +28,7 @@ import java.util.*;
 @RequiredArgsConstructor
 class NewDecisionListBody {
     private String question;
+    private boolean is_deleted;
 }
 
 @Getter
@@ -38,6 +38,7 @@ class NewOptionBody {
     private String name;
     private String description;
     private String url;
+    private boolean is_deleted;
 }
 
 @RestController
@@ -47,7 +48,7 @@ public class DecisionListController {
     private final DecisionListRepository decisionListRepository;
     private final OptionRepository optionRepository;
     private final LobbyRepository lobbyRepository;
-
+    private final TournamentRepository tournamentRepository;
     private final PusherInstance pusherInstance;
 
     @PostMapping("/decisionList/new")
@@ -64,10 +65,24 @@ public class DecisionListController {
         return dbDecisionList.getId();
     }
 
+    @GetMapping("/decisionList")
+    @PreAuthorize("hasRole('USER')")
+    public List<DecisionList> getUserDecisionLists(@CurrentUser UserPrincipal userPrincipal) {
+        return decisionListRepository.findByUserAndIsDeletedIs(userPrincipal.getUser(), null);
+    }
+
+
     @GetMapping("/decisionList/{id}")
     @PreAuthorize("hasRole('USER')")
     public DecisionList getDecisionList(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         return getDecisionListFromDb(userPrincipal, id);
+    }
+
+    @GetMapping("/decisionList/{id}/tournament_count")
+    @PreAuthorize("hasRole('USER')")
+    public Integer getDecisionListTournamentCount(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        return tournamentRepository.getCountByDecisionListId(decisionList.getId());
     }
 
     @GetMapping("/decisionList/{id}/options")
@@ -122,6 +137,16 @@ public class DecisionListController {
         Long delId = optionRepository.save(toDel).getId();
         checkAndSendUpdateToPlayers(decisionList);
         return delId;
+    }
+
+    @Transactional
+    @DeleteMapping("/decisionList/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public Boolean deleteDecisionList(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        decisionList.setIsDeleted(true);
+        decisionListRepository.save(decisionList);
+        return true;
     }
 
     @Transactional
