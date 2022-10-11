@@ -81,10 +81,12 @@ const List: FC<DecisionListProps> = ({ id, question, onDelete }) => {
       <h3 className="text-center text-xl">{question}</h3>
       {options === undefined ? null : (
         <div className="mt-2 flex w-full flex-wrap justify-center">
-          {options.map((option) => (
+          {options.map((option, index) => (
             <div
               key={`option-${option.id}`}
-              className="mr-3 rounded-xl border-2 border-gray-400 p-1 pl-2 pr-2 text-black"
+              className={`${
+                index < options.length - 1 ? "mr-3 " : ""
+              }rounded-xl border-2 border-gray-400 p-1 pl-2 pr-2 text-black`}
             >
               {option.name}
             </div>
