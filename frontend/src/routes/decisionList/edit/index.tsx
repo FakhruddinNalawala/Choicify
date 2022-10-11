@@ -519,7 +519,7 @@ export const OptionList: FC<OptionListProps> = ({
         Options
       </div>
       {data.length === 0 ? (
-        <div className="mt-2 text-center">Wow such empty</div>
+        <div className="mt-2 text-center">Wow! So empty</div>
       ) : (
         <ul>
           {data.map((option) => (

@@ -154,7 +154,7 @@ export const Lists: FC = () => {
       <PageTitleBar title="Lists" icon={<BsListStars />} />
       <div className="mt-20 flex w-full justify-center">
         {lists.length == 0 ? (
-          <div>Oh! You have empty</div>
+          <div>Oh! You don't have any lists!</div>
         ) : (
           <div className="w-full max-w-4xl p-4">
             {lists.map((list) => (
