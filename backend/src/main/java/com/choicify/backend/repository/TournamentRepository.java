@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,4 +16,6 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     @Query(value = "SELECT COUNT(*) FROM choicify.tournament t WHERE t.decision_list_id = ?1 AND t.is_deleted=0",
             nativeQuery = true)
     Integer getCountByDecisionListId(Long decisionListId);
+
+    List<Tournament> findByDecisionList(DecisionList decisionList);
 }

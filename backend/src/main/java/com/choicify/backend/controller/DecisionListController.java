@@ -1,9 +1,6 @@
 package com.choicify.backend.controller;
 
-import com.choicify.backend.model.DecisionList;
-import com.choicify.backend.model.Lobby;
-import com.choicify.backend.model.Option;
-import com.choicify.backend.model.User;
+import com.choicify.backend.model.*;
 import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.DecisionListRepository;
 import com.choicify.backend.repository.LobbyRepository;
@@ -83,6 +80,13 @@ public class DecisionListController {
     public Integer getDecisionListTournamentCount(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
         return tournamentRepository.getCountByDecisionListId(decisionList.getId());
+    }
+
+    @GetMapping("/decisionList/{id}/tournaments")
+    @PreAuthorize("hasRole('USER')")
+    public List<Tournament> getDecisionListTournaments(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        return tournamentRepository.findByDecisionList(decisionList);
     }
 
     @GetMapping("/decisionList/{id}/options")
