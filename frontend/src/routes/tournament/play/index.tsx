@@ -233,12 +233,13 @@ export const PlayTournament: FC = () => {
                     The tournament winner is {winner.option.name}
                   </div>
                   <div className="flex justify-center">
-                  <Link
-                    to={`/tournament/bracket/${tournament.id}`}
-                    className="mt-4 flex h-10 w-56 items-center justify-center border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none"
-                  >
-                    See Bracket
-                  </Link></div>
+                    <Link
+                      to={`/tournament/bracket/${tournament.id}`}
+                      className="mt-4 flex h-10 w-56 items-center justify-center border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none"
+                    >
+                      See Bracket
+                    </Link>
+                  </div>
                 </>
               ) : (
                 <div className="p-3 text-center text-2xl">

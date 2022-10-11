@@ -194,7 +194,7 @@ const insertOption = (
     matrix[row][col].isWinner = match.winner?.id === option.id;
     matrix[row][col].hasValue = true;
   }
-  if (is1) {
+  if (is1 && col + 1 < matrix[0].length) {
     for (let i = row + 1; i <= row + spacing; i++) {
       matrix[i][col + 1].paintLeft = true;
     }
