@@ -75,6 +75,9 @@ export const NewDecisionList: FC = () => {
         <button
           style={{ fontFamily: "'Dangrek', cursive" }}
           className="h-10 w-5/6 max-w-lg border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
+          onClick={() => {
+            navigate("/lists");
+          }}
         >
           Create from existing list
         </button>
