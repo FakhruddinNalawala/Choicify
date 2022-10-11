@@ -14,7 +14,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Profile } from "./routes/profile";
 import { Home } from "./routes/Home";
 import { Lists } from "./routes/lists";
-import { Settings } from "./routes/settings";
 import { NewDecisionList } from "./routes/decisionList/new";
 import { FullPageLoader } from "./components/FullPageLoader";
 import "react-toastify/dist/ReactToastify.css";
@@ -59,10 +58,6 @@ const router = createBrowserRouter([
           }
           return await res.json();
         },
-      },
-      {
-        path: "/settings",
-        element: <Settings />,
       },
       {
         path: "/list/new",
