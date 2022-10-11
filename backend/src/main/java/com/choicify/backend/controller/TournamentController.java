@@ -83,6 +83,14 @@ class MatchFinishedMessage {
     private Boolean wasFinal;
 }
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class TournamentBracket {
+    private List<Match> matches;
+    private DecisionList list;
+}
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api")
@@ -279,7 +287,7 @@ public class TournamentController {
 
     @GetMapping("/tournament/{id}/bracket")
     @PreAuthorize("hasRole('USER')")
-    public List<Match> getTournamentBracket(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+    public TournamentBracket getTournamentBracket(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         Optional<Tournament> optionalTournament = tournamentRepository.findById(id);
         if (optionalTournament.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the tournament");
@@ -301,7 +309,7 @@ public class TournamentController {
         if (matches.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This tournament has an invalid match");
         }
-        return matches;
+        return new TournamentBracket(matches, t.getDecisionList());
     }
 
     @Transactional

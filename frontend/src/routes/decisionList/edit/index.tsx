@@ -14,7 +14,7 @@ import { Spinner } from "../../../components/Spinner";
 import { getToken, request } from "../../../utils/sessionUtils";
 
 let pusher: Pusher | undefined;
-interface DecisionList {
+export interface DecisionList {
   id: number;
   question: string;
 }

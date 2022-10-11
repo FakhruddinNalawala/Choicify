@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { useLoaderData, useNavigate } from "react-router-dom";
+import { Link, useLoaderData, useNavigate } from "react-router-dom";
 import { PageTitleBar } from "../../../components/PageTitleBar";
 import { IoTrophyOutline } from "react-icons/io5";
 import { TbTournament } from "react-icons/tb";
@@ -62,9 +62,12 @@ export const ListTournaments: FC = () => {
     <div className="w-full">
       <PageTitleBar title="Tournaments" icon={<IoTrophyOutline />} />
       <div className="mt-20 flex w-full justify-center">
-        <div className="w-full max-w-4xl px-4 text-center text-4xl">
+        <Link
+          to="/lists"
+          className="w-full max-w-4xl px-4 text-center text-4xl hover:text-blue-600"
+        >
           {list.question}
-        </div>
+        </Link>
       </div>
       <div className="mt-1 flex w-full justify-center">
         {tournamentList.length === 0 ? (

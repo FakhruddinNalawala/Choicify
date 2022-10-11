@@ -1,44 +1,79 @@
 import { FC, useMemo } from "react";
-import { useLoaderData } from "react-router-dom";
-import { DecisionOption } from "../../decisionList/edit";
+import { IoTrophyOutline } from "react-icons/io5";
+import { Link, useLoaderData } from "react-router-dom";
+import { PageTitleBar } from "../../../components/PageTitleBar";
+import { DecisionList, DecisionOption } from "../../decisionList/edit";
 import { Match } from "../play";
 
+interface IBracketLoader {
+  matches: Match[];
+  list: DecisionList;
+}
+
 export const TournamentBracket: FC = () => {
-  const matches = useLoaderData() as Match[];
+  const { matches, list } = useLoaderData() as IBracketLoader;
   const data = useMemo(() => processMatches(matches), [matches]);
   return (
-    <table>
-      <tbody>
-        {data.map((row, rowIndex) => {
-          return (
-            <tr key={`row-${rowIndex}`}>
-              {row.map((cell, colIndex) => {
-                return (
-                  <td
-                    key={`cell-${rowIndex}-${colIndex}`}
-                    className={`border-black${
-                      cell.paintLeft ? " border-l-2" : ""
-                    }${cell.isPresent ? " border-b-2" : ""}`}
-                  >
-                    <div
-                      style={{
-                        width: "240px",
-                        height: "36px",
-                      }}
-                      className="flex items-end"
-                    >
-                      <span className="ml-2 block w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                        {cell.isPresent ? cell.name : null}
-                      </span>
-                    </div>
-                  </td>
-                );
-              })}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div>
+      <PageTitleBar title="Tournament Bracket" icon={<IoTrophyOutline />} />
+      <div className="mt-20 flex w-full justify-center">
+        <Link
+          to={`/list/${list.id}/tournaments`}
+          className="w-full max-w-4xl px-4 text-center text-4xl hover:text-blue-600"
+        >
+          {list.question}
+        </Link>
+      </div>
+      <div className="mt-5 px-10">
+        <table className="m-auto px-4">
+          <tbody>
+            {data.map((row, rowIndex) => {
+              return (
+                <tr key={`row-${rowIndex}`}>
+                  {row.map((cell, colIndex) => {
+                    return (
+                      <td
+                        key={`cell-${rowIndex}-${colIndex}`}
+                        className={`border-black${
+                          cell.paintLeft ? " border-l-2" : ""
+                        }${cell.isPresent ? " border-b-2" : ""}`}
+                      >
+                        <div
+                          style={{
+                            width: "240px",
+                            height: "36px",
+                          }}
+                          className="flex items-end"
+                        >
+                          <span
+                            className={`ml-2 block w-full overflow-hidden text-ellipsis whitespace-nowrap${
+                              cell.hasValue && cell.isOver && cell.isWinner
+                                ? " text-green-700"
+                                : ""
+                            }${
+                              cell.hasValue && cell.isOver && !cell.isWinner
+                                ? " text-red-700"
+                                : ""
+                            }`}
+                          >
+                            {cell.hasValue ? (
+                              <>
+                                <span>{cell.votes}: </span>
+                                <span>{cell.name}</span>
+                              </>
+                            ) : null}
+                          </span>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
@@ -52,6 +87,10 @@ const getNumberOfRows = (numberOfColumns: number): number => {
 
 interface ICellValue {
   name: string;
+  isOver: boolean;
+  isWinner: boolean;
+  votes: number;
+  hasValue: boolean;
   isPresent: boolean;
   paintLeft: boolean;
 }
@@ -62,7 +101,11 @@ const generateEmptyMatrix = (rows: number, cols: number) => {
       let value: ICellValue = {
         name: "",
         isPresent: false,
+        hasValue: false,
         paintLeft: false,
+        isOver: false,
+        isWinner: false,
+        votes: 0,
       };
       return value;
     });
@@ -136,6 +179,7 @@ const generateArray = (length: number) => {
 
 const insertOption = (
   option: DecisionOption | null,
+  match: Match,
   row: number,
   col: number,
   is1: boolean,
@@ -143,7 +187,13 @@ const insertOption = (
   matrix: ICellValue[][]
 ) => {
   matrix[row][col].isPresent = true;
-  if (option !== null) matrix[row][col].name = option.name;
+  if (option !== null) {
+    matrix[row][col].name = option.name;
+    matrix[row][col].isOver = match.winner !== null;
+    matrix[row][col].votes = is1 ? match.votesFor1 : match.votesFor2;
+    matrix[row][col].isWinner = match.winner?.id === option.id;
+    matrix[row][col].hasValue = true;
+  }
   if (is1) {
     for (let i = row + 1; i <= row + spacing; i++) {
       matrix[i][col + 1].paintLeft = true;
@@ -167,6 +217,7 @@ const processMatches = (matches: Match[]) => {
     let option2Row = getMatchOption2Row(columnIndex, singleSpacing, emtpyTop);
     insertOption(
       match.option1,
+      match,
       option1Row,
       matchColumn,
       true,
@@ -175,6 +226,7 @@ const processMatches = (matches: Match[]) => {
     );
     insertOption(
       match.option2,
+      match,
       option2Row,
       matchColumn,
       false,
@@ -189,6 +241,7 @@ const processMatches = (matches: Match[]) => {
       );
       insertOption(
         match.winner,
+        match,
         winnerRow,
         matchColumn + 1,
         false,
