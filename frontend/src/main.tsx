@@ -26,6 +26,7 @@ import {
   ListTournaments,
 } from "./routes/decisionList/tournaments";
 import { ErrorPage } from "./routes/error";
+import { TournamentBracket } from "./routes/tournament/bracket";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +129,10 @@ const router = createBrowserRouter([
           }
           return await res.json();
         },
+      },
+      {
+        path: "/tournament/bracket/:id",
+        element: <TournamentBracket />,
       },
     ],
   },

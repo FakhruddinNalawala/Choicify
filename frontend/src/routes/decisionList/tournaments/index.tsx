@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { PageTitleBar } from "../../../components/PageTitleBar";
 import { IoTrophyOutline } from "react-icons/io5";
 import { TbTournament } from "react-icons/tb";
@@ -28,6 +28,7 @@ export interface IListTournamentLoaderType {
 }
 
 const Tournament: FC<ITournamentProps> = ({ tournamet }) => {
+  const navigate = useNavigate();
   return (
     <div className="relative mb-4 grid w-full grid-cols-4 rounded-lg border-2 border-gray-400 p-3 shadow-md shadow-gray-400">
       <div className="text-black">{tournamet.date}</div>
@@ -42,7 +43,12 @@ const Tournament: FC<ITournamentProps> = ({ tournamet }) => {
           : "singleplayer"}
       </div>
       <div className="h-full text-black">
-        <TbTournament className="float-right h-full cursor-pointer text-2xl hover:text-blue-600" />
+        <TbTournament
+          className="float-right h-full cursor-pointer text-2xl hover:text-blue-600"
+          onClick={() => {
+            navigate(`/tournament/bracket/${tournamet.id}`);
+          }}
+        />
       </div>
     </div>
   );
@@ -51,7 +57,6 @@ const Tournament: FC<ITournamentProps> = ({ tournamet }) => {
 export const ListTournaments: FC = () => {
   const { decisionList: list, tournaments: tournamentList } =
     useLoaderData() as IListTournamentLoaderType;
-  console.log(tournamentList);
 
   return (
     <div className="w-full">
