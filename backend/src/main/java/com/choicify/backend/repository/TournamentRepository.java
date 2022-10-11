@@ -17,5 +17,5 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
             nativeQuery = true)
     Integer getCountByDecisionListId(Long decisionListId);
 
-    List<Tournament> findByDecisionList(DecisionList decisionList);
+    List<Tournament> findByDecisionListAndIsDeleted(DecisionList decisionList, Boolean isDeleted);
 }

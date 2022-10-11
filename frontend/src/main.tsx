@@ -21,7 +21,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { EditDecisionList } from "./routes/decisionList/edit";
 import { Lobby } from "./routes/lobby";
 import { PlayTournament } from "./routes/tournament/play";
-import { ListTournaments } from "./routes/decisionList/tournaments";
+import {
+  IListTournamentLoaderType,
+  ITournament,
+  ListTournaments,
+} from "./routes/decisionList/tournaments";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +58,7 @@ const router = createBrowserRouter([
             return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
           }
           return await res.json();
-        }
+        },
       },
       {
         path: "/settings",
@@ -78,13 +82,29 @@ const router = createBrowserRouter([
       {
         path: "/list/:decisionListId/tournaments",
         element: <ListTournaments />,
-        loader: async ({params}) => {
-          let res = await request(`/api/decisionList/${params.decisionListId}/tournaments`);
+        loader: async ({ params }) => {
+          let res = await request(
+            `/api/decisionList/${params.decisionListId}/tournaments`
+          );
           if (!res.ok) {
             return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
           }
-          return await res.json();
-        }
+          let result: IListTournamentLoaderType = await res.json();
+          let relativeFormatter = new Intl.RelativeTimeFormat();
+          let absoluteFormatter = new Intl.DateTimeFormat();
+          let timeNow = new Date().getTime();
+          for (let t of result.tournaments) {
+            let daysAgo = Math.round(
+              (t.startTime - timeNow) / (1000 * 60 * 60 * 24)
+            );
+            if (Math.abs(daysAgo) > 31) {
+              t.date = absoluteFormatter.format(t.startTime);
+              continue;
+            }
+            t.date = relativeFormatter.format(daysAgo, "days");
+          }
+          return result;
+        },
       },
       {
         path: "/lobby/:lobbyCode",

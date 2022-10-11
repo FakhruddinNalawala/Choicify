@@ -8,7 +8,7 @@ import { request } from "../../utils/sessionUtils";
 import { AiOutlineDelete } from "react-icons/ai";
 import { Popover } from "@headlessui/react";
 import { toast } from "react-toastify";
-interface IDecisionList {
+export interface IDecisionList {
   id: number;
   question: string;
   is_deleted?: boolean | null;
@@ -44,7 +44,7 @@ const List: FC<DecisionListProps> = ({ id, question, onDelete }) => {
 
   return (
     <div
-      className="relative mb-4 w-full rounded-lg border-2 border-gray-400 p-3 shadow-md shadow-gray-400 hover:border-blue-600 hover:text-blue-600"
+      className="relative mb-4 w-full cursor-pointer rounded-lg border-2 border-gray-400 p-3 shadow-md shadow-gray-400 hover:border-blue-600 hover:text-blue-600"
       onClick={() => navigate(`/list/edit/${id}`)}
     >
       <div className="absolute top-0 right-0 mt-2 mr-2">

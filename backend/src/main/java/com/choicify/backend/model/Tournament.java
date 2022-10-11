@@ -38,7 +38,7 @@ public class Tournament {
     @JoinColumn(name = "primary_user_id", nullable = false)
     private User primaryUser;
 
-    private boolean isDeleted;
+    private Boolean isDeleted;
 
     private Long startTime;
 

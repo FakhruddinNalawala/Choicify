@@ -98,7 +98,7 @@ public class UserController {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bad channel ID");
             }
             Tournament t = tournament.get();
-            if (t.isDeleted()) {
+            if (t.getIsDeleted()) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tournament not available");
             }
             if (!Objects.equals(t.getPrimaryUser().getId(), userPrincipal.getId())) {

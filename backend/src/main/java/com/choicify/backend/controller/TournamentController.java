@@ -451,7 +451,7 @@ public class TournamentController {
         Date currentDate = new Date();
         tournament.setStartTime(currentDate.getTime());
         tournament.setMultiplayer(isMultiplayer);
-        tournament.setDeleted(false);
+        tournament.setIsDeleted(false);
         tournament.setCurrentMatchIndex(-1L);
         tournament.setPrimaryUser(userPrincipal.getUser());
         tournament.setPlayerCount(isMultiplayer ? (long) players.size() : 1L);
