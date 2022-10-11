@@ -25,6 +25,7 @@ import {
   ITournament,
   ListTournaments,
 } from "./routes/decisionList/tournaments";
+import { ErrorPage } from "./routes/error";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
+    errorElement: <ErrorPage />,
     loader: async () => {
       let res = await request("/api/test_session");
       if (!res.ok) {
@@ -45,6 +47,10 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "/error",
+        element: <ErrorPage />,
+      },
+      {
         path: "/profile",
         element: <Profile />,
       },
@@ -54,7 +60,7 @@ const router = createBrowserRouter([
         loader: async () => {
           let res = await request(`/api/decisionList`);
           if (!res.ok) {
-            return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
+            throw new Error(await res.text());
           }
           return await res.json();
         },
@@ -69,7 +75,7 @@ const router = createBrowserRouter([
         loader: async ({ params }) => {
           let res = await request(`/api/decisionList/${params.decisionListId}`);
           if (!res.ok) {
-            return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
+            throw new Error(await res.text());
           }
           return await res.json();
         },
@@ -82,7 +88,7 @@ const router = createBrowserRouter([
             `/api/decisionList/${params.decisionListId}/tournaments`
           );
           if (!res.ok) {
-            return redirect("/error"); // TODO: go to route showing that there was an error with the deicision list, most likely they don't have access to it
+            throw new Error(await res.text());
           }
           let result: IListTournamentLoaderType = await res.json();
           let relativeFormatter = new Intl.RelativeTimeFormat();
@@ -107,7 +113,7 @@ const router = createBrowserRouter([
         loader: async ({ params }) => {
           let res = await request(`/api/lobby/${params.lobbyCode}`);
           if (!res.ok) {
-            return redirect("/error"); // TODO: go to route showing that there was an error with the lobby
+            throw new Error(await res.text());
           }
           return await res.json();
         },
@@ -118,7 +124,7 @@ const router = createBrowserRouter([
         loader: async ({ params }) => {
           let res = await request(`/api/tournament/${params.id}`);
           if (!res.ok) {
-            return redirect("/error"); // TODO: go to route showing that there was an error with the tournament
+            throw new Error(await res.text());
           }
           return await res.json();
         },
