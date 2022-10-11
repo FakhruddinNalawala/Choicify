@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { FC, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Spinner } from "../../../components/Spinner";
 import { request } from "../../../utils/sessionUtils";
 import { toast } from "react-toastify";
@@ -72,15 +72,13 @@ export const NewDecisionList: FC = () => {
         Create
       </button>
       <div className="absolute bottom-0 w-full pb-10 text-center">
-        <button
+        <Link
+          to="/lists"
           style={{ fontFamily: "'Dangrek', cursive" }}
-          className="h-10 w-5/6 max-w-lg border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
-          onClick={() => {
-            navigate("/lists");
-          }}
+          className="inline-flex h-10 w-5/6 max-w-lg items-center justify-center border-2 border-black shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
         >
           Create from existing list
-        </button>
+        </Link>
       </div>
     </div>
   );
