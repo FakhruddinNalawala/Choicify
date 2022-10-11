@@ -133,6 +133,13 @@ const router = createBrowserRouter([
       {
         path: "/tournament/bracket/:id",
         element: <TournamentBracket />,
+        loader: async ({ params }) => {
+          let res = await request(`/api/tournament/${params.id}/bracket`);
+          if (!res.ok) {
+            throw new Error(await res.text());
+          }
+          return await res.json();
+        },
       },
     ],
   },

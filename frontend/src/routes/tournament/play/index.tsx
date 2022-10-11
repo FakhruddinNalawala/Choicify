@@ -9,10 +9,11 @@ import { DecisionOption, LobbyPlayer } from "../../decisionList/edit";
 
 let pusher: Pusher | undefined;
 
-interface Match {
+export interface Match {
   id: number;
   option1: DecisionOption;
   option2: DecisionOption;
+  matchIndex: number;
   votesFor1: number;
   votesFor2: number;
   winner: DecisionOption | null;
