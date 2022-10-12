@@ -34,6 +34,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
 
+    testImplementation 'org.hamcrest:hamcrest:2.2'
+
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
     compileOnly 'org.projectlombok:lombok:1.18.24'
