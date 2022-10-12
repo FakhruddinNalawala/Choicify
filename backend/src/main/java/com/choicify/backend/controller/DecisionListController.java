@@ -1,5 +1,6 @@
 package com.choicify.backend.controller;
 
+import com.choicify.backend.helpers.NewDecisionListBody;
 import com.choicify.backend.model.*;
 import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.DecisionListRepository;
@@ -20,14 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
 import java.util.*;
-
-@Getter
-@Setter
-@RequiredArgsConstructor
-class NewDecisionListBody {
-    private String question;
-    private boolean is_deleted;
-}
 
 @Getter
 @Setter
