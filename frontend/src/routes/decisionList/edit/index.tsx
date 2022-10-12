@@ -682,7 +682,10 @@ export const PlayerList: FC<{
     mePlayer !== undefined ? "cursor-pointer" : "cursor-not-allowed";
   return (
     <div>
-      <div className="pb-2 pl-5 text-xl">Players</div>
+      <div className="pl-5 text-xl">Players</div>
+      <div className="pb-2 pl-5 text-sm">
+        (click on a player to kick them from the lobby)
+      </div>
       <div className="flex flex-wrap">
         {players.map((player) => (
           <div
