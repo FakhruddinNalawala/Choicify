@@ -448,7 +448,15 @@ export const EditDecisionList: FC = () => {
             disabled={isLoading}
             style={{ width: "48%" }}
             className="h-10 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
-            onClick={() => startTournament()}
+            onClick={() => {
+              if (isMultiplayer && players.length <= 1) {
+                toast.error(
+                  "You cannot start a multiplayer tournament with only yourself, please change to singleplayer"
+                );
+                return;
+              }
+              startTournament();
+            }}
           >
             {isLoading ? (
               <Spinner className="-ml-1 mr-3 inline-block h-5 w-5 animate-spin text-black" />
