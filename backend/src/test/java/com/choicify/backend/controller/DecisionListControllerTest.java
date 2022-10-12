@@ -1,24 +1,13 @@
 package com.choicify.backend.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.choicify.backend.controller.DecisionListController;
 import com.choicify.backend.helpers.NewDecisionListBody;
 import com.choicify.backend.model.AuthProvider;
 import com.choicify.backend.model.DecisionList;
 import com.choicify.backend.model.User;
-import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.DecisionListRepository;
-import com.choicify.backend.repository.LobbyRepository;
-import com.choicify.backend.repository.OptionRepository;
-import com.choicify.backend.repository.TournamentRepository;
 import com.choicify.backend.security.UserPrincipal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +18,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
 public class DecisionListControllerTest {
@@ -37,14 +32,6 @@ public class DecisionListControllerTest {
 
     @Mock
     DecisionListRepository decisionListRepository;
-    @Mock
-    OptionRepository optionRepository;
-    @Mock
-    LobbyRepository lobbyRepository;
-    @Mock
-    TournamentRepository tournamentRepository;
-    @Mock
-    PusherInstance pusherInstance;
 
     @Test
     public void testNewDecisionListWorks() {
