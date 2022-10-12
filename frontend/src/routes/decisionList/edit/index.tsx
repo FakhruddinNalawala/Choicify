@@ -683,9 +683,11 @@ export const PlayerList: FC<{
   return (
     <div>
       <div className="pl-5 text-xl">Players</div>
-      <div className="pb-2 pl-5 text-sm">
-        (click on a player to kick them from the lobby)
-      </div>
+      {mePlayer !== undefined ? (
+        <div className="pb-2 pl-5 text-sm">
+          (click on a player to kick them from the lobby)
+        </div>
+      ) : null}
       <div className="flex flex-wrap">
         {players.map((player) => (
           <div
