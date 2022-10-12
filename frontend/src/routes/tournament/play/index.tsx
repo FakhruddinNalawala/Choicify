@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Pusher, { PresenceChannel } from "pusher-js";
 import { FC, useEffect, useState } from "react";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Spinner } from "../../../components/Spinner";
 import { getToken, request } from "../../../utils/sessionUtils";
@@ -9,10 +9,11 @@ import { DecisionOption, LobbyPlayer } from "../../decisionList/edit";
 
 let pusher: Pusher | undefined;
 
-interface Match {
+export interface Match {
   id: number;
   option1: DecisionOption;
   option2: DecisionOption;
+  matchIndex: number;
   votesFor1: number;
   votesFor2: number;
   winner: DecisionOption | null;
@@ -227,9 +228,19 @@ export const PlayTournament: FC = () => {
               <div>Loading results</div>
             ) : winner ? (
               winner.isFinal ? (
-                <div className="p-3 text-center text-4xl">
-                  The tournament winner is {winner.option.name}
-                </div>
+                <>
+                  <div className="p-3 text-center text-4xl">
+                    The tournament winner is {winner.option.name}
+                  </div>
+                  <div className="flex justify-center">
+                    <Link
+                      to={`/tournament/bracket/${tournament.id}`}
+                      className="mt-4 flex h-10 w-56 items-center justify-center border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none"
+                    >
+                      See Bracket
+                    </Link>
+                  </div>
+                </>
               ) : (
                 <div className="p-3 text-center text-2xl">
                   {winner.option.name} with {winner.votes} / {winner.totalVotes}{" "}

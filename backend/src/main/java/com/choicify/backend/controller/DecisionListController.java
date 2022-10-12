@@ -1,9 +1,6 @@
 package com.choicify.backend.controller;
 
-import com.choicify.backend.model.DecisionList;
-import com.choicify.backend.model.Lobby;
-import com.choicify.backend.model.Option;
-import com.choicify.backend.model.User;
+import com.choicify.backend.model.*;
 import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.DecisionListRepository;
 import com.choicify.backend.repository.LobbyRepository;
@@ -11,6 +8,7 @@ import com.choicify.backend.repository.OptionRepository;
 import com.choicify.backend.repository.TournamentRepository;
 import com.choicify.backend.security.CurrentUser;
 import com.choicify.backend.security.UserPrincipal;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -39,6 +37,15 @@ class NewOptionBody {
     private String description;
     private String url;
     private boolean is_deleted;
+}
+
+@Getter
+@Setter
+@RequiredArgsConstructor
+@AllArgsConstructor
+class DecisionListTournamentsResponse {
+    private DecisionList decisionList;
+    private List<Tournament> tournaments;
 }
 
 @RestController
@@ -83,6 +90,14 @@ public class DecisionListController {
     public Integer getDecisionListTournamentCount(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
         return tournamentRepository.getCountByDecisionListId(decisionList.getId());
+    }
+
+    @GetMapping("/decisionList/{id}/tournaments")
+    @PreAuthorize("hasRole('USER')")
+    public DecisionListTournamentsResponse getDecisionListTournaments(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
+        List<Tournament> tournaments = tournamentRepository.findByDecisionListAndIsDeleted(decisionList, false);
+        return new DecisionListTournamentsResponse(decisionList, tournaments);
     }
 
     @GetMapping("/decisionList/{id}/options")

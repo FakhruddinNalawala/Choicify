@@ -14,7 +14,7 @@ import { Spinner } from "../../../components/Spinner";
 import { getToken, request } from "../../../utils/sessionUtils";
 
 let pusher: Pusher | undefined;
-interface DecisionList {
+export interface DecisionList {
   id: number;
   question: string;
 }
@@ -519,7 +519,7 @@ export const OptionList: FC<OptionListProps> = ({
         Options
       </div>
       {data.length === 0 ? (
-        <div className="mt-2 text-center">Wow such empty</div>
+        <div className="mt-2 text-center">Wow! So empty</div>
       ) : (
         <ul>
           {data.map((option) => (

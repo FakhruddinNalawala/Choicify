@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MatchRepository extends JpaRepository<Match, Long> {
@@ -22,4 +23,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     void findAndIncrementOption2(Long matchId);
 
     Optional<Match> findByIdAndTournament(Long id, Tournament tournament);
+
+    List<Match> findByTournamentOrderByMatchIndex(Tournament tournament);
 }

@@ -83,6 +83,14 @@ class MatchFinishedMessage {
     private Boolean wasFinal;
 }
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class TournamentBracket {
+    private List<Match> matches;
+    private DecisionList list;
+}
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api")
@@ -277,6 +285,33 @@ public class TournamentController {
                 m.getTotalVotes(), m.isFinal());
     }
 
+    @GetMapping("/tournament/{id}/bracket")
+    @PreAuthorize("hasRole('USER')")
+    public TournamentBracket getTournamentBracket(@CurrentUser UserPrincipal userPrincipal, @PathVariable long id) {
+        Optional<Tournament> optionalTournament = tournamentRepository.findById(id);
+        if (optionalTournament.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the tournament");
+        }
+        // check user
+        Tournament t = optionalTournament.get();
+        if (!t.isMultiplayer()) {
+            if (!Objects.equals(t.getPrimaryUser().getId(), userPrincipal.getId()))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot play in this tournament");
+        } else {
+            if (!Objects.equals(t.getPrimaryUser().getId(), userPrincipal.getId())) {
+                Optional<Player> player = playerRepository.findPlayerByTournamentAndUser(t, userPrincipal.getUser());
+                if (player.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot play in this tournament");
+                }
+            }
+        }
+        List<Match> matches = matchRepository.findByTournamentOrderByMatchIndex(t);
+        if (matches.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This tournament has an invalid match");
+        }
+        return new TournamentBracket(matches, t.getDecisionList());
+    }
+
     @Transactional
     @PostMapping("/tournament/{id}/vote/{for1Or2}")
     @PreAuthorize("hasRole('USER')")
@@ -451,7 +486,7 @@ public class TournamentController {
         Date currentDate = new Date();
         tournament.setStartTime(currentDate.getTime());
         tournament.setMultiplayer(isMultiplayer);
-        tournament.setDeleted(false);
+        tournament.setIsDeleted(false);
         tournament.setCurrentMatchIndex(-1L);
         tournament.setPrimaryUser(userPrincipal.getUser());
         tournament.setPlayerCount(isMultiplayer ? (long) players.size() : 1L);

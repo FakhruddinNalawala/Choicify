@@ -23,8 +23,9 @@ export const Home: FC = () => {
         onChange={(e) => setLobbyCode(e.target.value)}
       />
       <button
+        disabled={lobbyCode.length === 0}
         style={{ fontFamily: "'Dangrek', cursive" }}
-        className="h-10 w-56 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none lg:w-64"
+        className="h-10 w-56 border-2 border-black text-center shadow-md hover:shadow-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none lg:w-64"
         onClick={() => navigate(`/lobby/${lobbyCode}`)}
       >
         Join

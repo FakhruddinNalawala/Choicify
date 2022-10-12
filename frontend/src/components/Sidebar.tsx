@@ -88,12 +88,6 @@ export const Sidebar: FC = () => {
             text="Lists"
             onClick={() => setShow(false)}
           />
-          <PageButton
-            to="/settings"
-            icon={<IoSettingsOutline />}
-            text="Settings"
-            onClick={() => setShow(false)}
-          />
           <div
             className="w-full cursor-pointer border-b-2 pt-3 pb-3 pl-3 text-center text-2xl"
             onClick={() => setShow(false)}

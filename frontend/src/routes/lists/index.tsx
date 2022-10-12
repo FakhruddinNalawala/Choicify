@@ -8,7 +8,7 @@ import { request } from "../../utils/sessionUtils";
 import { AiOutlineDelete } from "react-icons/ai";
 import { Popover } from "@headlessui/react";
 import { toast } from "react-toastify";
-interface IDecisionList {
+export interface IDecisionList {
   id: number;
   question: string;
   is_deleted?: boolean | null;
@@ -44,7 +44,7 @@ const List: FC<DecisionListProps> = ({ id, question, onDelete }) => {
 
   return (
     <div
-      className="relative mb-4 w-full rounded-lg border-2 border-gray-400 p-3 shadow-md shadow-gray-400 hover:border-blue-600 hover:text-blue-600"
+      className="relative mb-4 w-full cursor-pointer rounded-lg border-2 border-gray-400 p-3 shadow-md shadow-gray-400 hover:border-blue-600 hover:text-blue-600"
       onClick={() => navigate(`/list/edit/${id}`)}
     >
       <div className="absolute top-0 right-0 mt-2 mr-2">
@@ -81,10 +81,12 @@ const List: FC<DecisionListProps> = ({ id, question, onDelete }) => {
       <h3 className="text-center text-xl">{question}</h3>
       {options === undefined ? null : (
         <div className="mt-2 flex w-full flex-wrap justify-center">
-          {options.map((option) => (
+          {options.map((option, index) => (
             <div
               key={`option-${option.id}`}
-              className="mr-3 rounded-xl border-2 border-gray-400 p-1 pl-2 pr-2 text-black"
+              className={`${
+                index < options.length - 1 ? "mr-3 " : ""
+              }rounded-xl border-2 border-gray-400 p-1 pl-2 pr-2 text-black`}
             >
               {option.name}
             </div>
@@ -152,7 +154,7 @@ export const Lists: FC = () => {
       <PageTitleBar title="Lists" icon={<BsListStars />} />
       <div className="mt-20 flex w-full justify-center">
         {lists.length == 0 ? (
-          <div>Oh! You have empty</div>
+          <div>Oh! You don't have any lists!</div>
         ) : (
           <div className="w-full max-w-4xl p-4">
             {lists.map((list) => (
