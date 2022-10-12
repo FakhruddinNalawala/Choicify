@@ -137,7 +137,7 @@ public class DecisionListController {
                                          @PathVariable long optionId) {
         DecisionList decisionList = getDecisionListFromDb(userPrincipal, id);
         Optional<Option> toDelete = optionRepository.findById(optionId);
-        if (!toDelete.isPresent()) {
+        if (toDelete.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find the option");
         }
         Option toDel = toDelete.get();
