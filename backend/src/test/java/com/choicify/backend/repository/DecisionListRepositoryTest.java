@@ -9,7 +9,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.choicify.backend.model.AuthProvider;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -20,11 +22,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.choicify.backend.exception.ResourceNotFoundException;
 import com.choicify.backend.model.DecisionList;
 import com.choicify.backend.model.User;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 
 @SpringBootTest
 @TestMethodOrder(OrderAnnotation.class)
 public class DecisionListRepositoryTest {
 
+    private static DecisionList decisionListInDb = null;
     @Autowired
     private DecisionListRepository decisionListRepository;
 
@@ -34,44 +39,52 @@ public class DecisionListRepositoryTest {
     @Test
     @Order(1)
     public void testCreateDecisionListRepo() {
-        User user = userRepository.findById(2L).orElseThrow(() -> new ResourceNotFoundException("User", "Id", 2L));
+        decisionListInDb = null;
+        List<User> users = userRepository.findAll();
+        assertTrue(users.size() > 0);
 
-        DecisionList decisionList = new DecisionList();            
+        User user = users.get(0);
+
+        DecisionList decisionList = new DecisionList();
         decisionList.setQuestion("Lunch");
         decisionList.setUser(user);
         decisionList.setIsDeleted(false);
-        decisionListRepository.save(decisionList);
+        decisionListInDb = decisionListRepository.save(decisionList);
 
-        assertNotNull(decisionListRepository.findById(decisionList.getId()).get());     
+        assertTrue(decisionListRepository.findById(decisionListInDb.getId()).isPresent());
     }
 
     @Test
     @Order(2)
     public void testReadAllDecisionListRepo() {
         List<DecisionList> list = decisionListRepository.findAll();
-        assertTrue(list.size() > 0);  
+        assertTrue(list.size() > 0);
     }
 
     @Test
     @Order(3)
     public void testUpdateDecisionListRepo() {
-        List<DecisionList> list = decisionListRepository.findAll();
-        Long id = list.get(list.size() -1).getId();
-        DecisionList decisionList = decisionListRepository.findById(id).get();
+        assertNotNull(decisionListInDb);
+        Optional<DecisionList> optionalDecisionList = decisionListRepository.findById(decisionListInDb.getId());
+        assertTrue(optionalDecisionList.isPresent());
+        DecisionList decisionList = optionalDecisionList.get();
         decisionList.setQuestion("brunch");
         decisionListRepository.save(decisionList);
 
-        assertEquals("brunch", decisionListRepository.findById(id).get().getQuestion());
+        Optional<DecisionList> result = decisionListRepository.findById(decisionListInDb.getId());
+        assertTrue(result.isPresent());
+
+        assertEquals("brunch", result.get().getQuestion());
     }
 
     @Test
     @Order(4)
     public void testDeleteDecisionListRepository() {
-        List<DecisionList> list = decisionListRepository.findAll();
-        Long id = list.get(list.size() -1).getId();
+        assertNotNull(decisionListInDb);
 
-        decisionListRepository.deleteById(id);        
-        assertFalse(decisionListRepository.existsById(id));
+        decisionListRepository.deleteById(decisionListInDb.getId());
+        assertFalse(decisionListRepository.existsById(decisionListInDb.getId()));
+        decisionListInDb = null;
     }
- 
+
 }
