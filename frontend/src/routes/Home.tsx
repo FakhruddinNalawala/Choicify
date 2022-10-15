@@ -36,10 +36,13 @@ export const Home: FC = () => {
       >
         <Link
           to="list/new"
-          className="inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-black text-center text-5xl shadow-md hover:shadow-gray-400"
+          className="inline-flex h-16 items-center justify-center rounded-full border-2 border-black px-6 text-center text-2xl shadow-md hover:shadow-gray-400"
         >
-          +
+          Create New Tournament
         </Link>
+      </div>
+      <div className="absolute top-0 right-0 mt-4 mr-24 flex h-16 items-center justify-end text-xl">
+        Click on your profile image -&gt;
       </div>
     </div>
   );

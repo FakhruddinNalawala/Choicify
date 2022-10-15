@@ -24,6 +24,15 @@ export const TournamentBracket: FC = () => {
           {list.question}
         </Link>
       </div>
+      <div className="mt-4 flex w-full justify-center">
+        <pre style={{ fontFamily: "'Dangrek', cursive" }}>
+          <span className="text-green-700">Green</span> for winners and{" "}
+          <span className="text-red-700">Red</span> for losers
+        </pre>
+      </div>
+      <div className="flex w-full justify-center">
+        Format is: &lt;Votes for this option&gt;: &lt;Option name&gt;
+      </div>
       <div className="mt-5 px-10">
         <table className="m-auto px-4">
           <tbody>

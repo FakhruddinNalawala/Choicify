@@ -1,5 +1,7 @@
 package com.choicify.backend.controller;
 
+import com.choicify.backend.helpers.TournamentForResponse;
+import com.choicify.backend.helpers.TournamentPlayer;
 import com.choicify.backend.model.*;
 import com.choicify.backend.pusher.PusherInstance;
 import com.choicify.backend.repository.*;
@@ -29,32 +31,9 @@ class CreateNewTournamentBody {
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-class TournamentForResponse {
-    private Long id;
-    private String question;
-    private Boolean isPrimary;
-    private Match currentMatch;
-    private Long playerCount;
-    private Boolean hasVoted;
-    private List<TournamentPlayer> haveVoted;
-    private List<TournamentPlayer> haveNotVoted;
-}
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 class TournamentVotesResponse {
     private Long voteCount;
     private Long totalPlayers;
-}
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-class TournamentPlayer {
-    private Long id;
-    private String name;
-    private Boolean hasVoted;
 }
 
 @Data
